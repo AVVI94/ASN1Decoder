@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31624.102
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Asn1DecoderNet5", "Asn1DecoderNet5\Asn1DecoderNet5.csproj", "{FD29AE8F-BD5E-4BA3-AA74-E18C1C57DF64}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Asn1Decoder.ConsoleDecoder", "Asn1Decoder.ConsoleDecoder\Asn1Decoder.ConsoleDecoder.csproj", "{31FF178C-46F7-4CFF-9A06-B29FB694509A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FD29AE8F-BD5E-4BA3-AA74-E18C1C57DF64}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FD29AE8F-BD5E-4BA3-AA74-E18C1C57DF64}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FD29AE8F-BD5E-4BA3-AA74-E18C1C57DF64}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FD29AE8F-BD5E-4BA3-AA74-E18C1C57DF64}.Release|Any CPU.Build.0 = Release|Any CPU
+		{31FF178C-46F7-4CFF-9A06-B29FB694509A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{31FF178C-46F7-4CFF-9A06-B29FB694509A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{31FF178C-46F7-4CFF-9A06-B29FB694509A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{31FF178C-46F7-4CFF-9A06-B29FB694509A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {67824D32-8864-47DD-A29F-9429DDE6E640}
+	EndGlobalSection
+EndGlobal
