@@ -10,4 +10,4 @@ This library aims to make decoding DER encoded data into ASN1 structure human re
 6. enjoy the string (or an exception)
 
 # How to use in code
-See ASN1Decoder/Asn1Decoder.ConsoleDecoder/
+See www.github.com/AVVI94/ASN1Decoder/blob/main/Asn1Decoder.ConsoleDecoder/Program.cs
