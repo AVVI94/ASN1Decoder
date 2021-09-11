@@ -8,27 +8,28 @@ using Asn1DecoderNet5.Tags;
 
 namespace Asn1DecoderNet5
 {
-    public class Decoder
+    /// <summary>
+    /// ASN1 Decoder
+    /// </summary>
+    public sealed class Decoder
     {
         internal Decoder()
         {
         }
 
-        int i = 0;
+        #region privateMethods
+        
         internal ITag Decode_(byte[] data)
         {
-            int thisStart = i;
             var tag = new Tag(data, ref i);
-            int tagLen = i - thisStart;
             var len = DecodeLength(data);
             var start = i;
-            var header = start - thisStart;
 
             if (tag.IsConstructed)
             {
                 GetChilds();
             }
-            else if (tag.IsUniversal() && (tag.TagNumber == 0x03 || tag.TagNumber == 0x04))
+            else if (tag.IsUniversal && (tag.TagNumber == 0x03 || tag.TagNumber == 0x04))
             {
                 try
                 {
@@ -38,7 +39,7 @@ namespace Asn1DecoderNet5
                     GetChilds();
                     foreach (var ch in tag.Childs)
                     {
-                        if (ch.IsEoc())
+                        if (ch.IsEoc)
                             throw new Exception("EOC is not supposed to be actual content");
                     }
                 }
@@ -80,7 +81,7 @@ namespace Asn1DecoderNet5
                         for (; ; )
                         {
                             var child = Decode_(data);
-                            if (child.IsEoc())
+                            if (child.IsEoc)
                                 break;
                             tag.Childs.Add(child);
                         }
@@ -114,14 +115,58 @@ namespace Asn1DecoderNet5
 
             return buf;
         }
+        static void ProcessKeyUsage(ITag tag, string tmp)
+        {
+            var hex = BitConverter.ToString(tag.Content);
+            string bin = "";
+            foreach (var item in hex.Split("-"))
+            {
+                bin += Convert.ToString(Convert.ToInt64(item, 16), 2);
+            }
 
+            string ku = "";
+            bin = bin.PadRight(8, '0');
+            bin = bin.Substring(bin.Length - 8);
+            for (int i = 0; i < bin.Length; i++)
+            {
+                string _tmp = bin.Substring(i, 1);
+                if (Enum.IsDefined(typeof(KU), i) && _tmp == "1")
+                {
+                    ku += $"{(KU)i}, ";
+                }
+                if (tmp == "00000000")
+                    ku = "decipherOnly";
+            }
+            tag.ReadableContent = ku;
+        }
+        #endregion
+
+        #region privateFields
+        //"global" stream position
+        int i = 0;
+
+        static string _lastOid;
+        #endregion
+
+        #region publicAPI
+        /// <summary>
+        /// Decode the DER encoded data sequence
+        /// </summary>
+        /// <param name="data">DER encoded data represented in bytes</param>
+        /// <returns><see cref="ITag"/> containing the decoded sequence</returns>
         public static ITag Decode(byte[] data)
         {
             Decoder dc = new();
             return dc.Decode_(data);
         }
 
-        static string _lastOid;
+        /// <summary>
+        /// Converts Tag (and all its childs) into readable string
+        /// </summary>
+        /// <param name="tag">Tag</param>
+        /// <param name="structureSpacer">String used for structurizing the ASN1 output, " | " is recomended (whit the whitespaces)</param>
+        /// <param name="maxContentLineLength">How many characters can one line have</param>
+        /// <returns></returns>
         public static string TagToString(ITag tag, string structureSpacer, int maxContentLineLength)
         {
             ConvertTagsContents(tag);
@@ -155,23 +200,25 @@ namespace Asn1DecoderNet5
                     {
                         _lastOid = tag.ReadableContent;
                     }
+                    #region OID_SpecificProcessing
                     if (tag.TagNumber == 3 && _lastOid == "2.5.29.15, keyUsage, X.509 extension")
                     {
                         ProcessKeyUsage(tag, tmp);
                     }
+                    #endregion
                     if (tag.ReadableContent.Length > maxContentLineLength)
                     {
                         var spacer = MultiplyString(structureSpacer, lvl + 1);
-                        
+
                         var tmpList = new List<string>();
-                        for (int p = 0; p < tag.ReadableContent.Length;) 
+                        for (int p = 0; p < tag.ReadableContent.Length;)
                         {
-                            tmpList.Add(spacer + tag.ReadableContent.Substring(p, p + 63 < tag.ReadableContent.Length ? 63 : tag.ReadableContent.Length - p)); 
+                            tmpList.Add(spacer + tag.ReadableContent.Substring(p, p + 63 < tag.ReadableContent.Length ? 63 : tag.ReadableContent.Length - p));
                             p += maxContentLineLength;
                         }
                         tag.ReadableContent = Environment.NewLine;
                         tag.ReadableContent += string.Join(Environment.NewLine, tmpList);
-                        
+
                         tmp += $"{MultiplyString(structureSpacer, lvl)}{tag.TagName} {tag.ReadableContent}{Environment.NewLine}";
                     }
                     else
@@ -194,30 +241,6 @@ namespace Asn1DecoderNet5
             }
             #endregion
         }
-
-        static void ProcessKeyUsage(ITag tag, string tmp)
-        {
-            var hex = BitConverter.ToString(tag.Content);
-            string bin = "";
-            foreach (var item in hex.Split("-"))
-            {
-                bin += Convert.ToString(Convert.ToInt64(item, 16), 2);
-            }
-
-            string ku = "";
-            bin = bin.PadRight(8, '0');
-            bin = bin.Substring(bin.Length - 8);
-            for (int i = 0; i < bin.Length; i++)
-            {
-                string _tmp = bin.Substring(i, 1);
-                if (Enum.IsDefined(typeof(KU), i) && _tmp == "1")
-                {
-                    ku += $"{(KU)i}, ";
-                }
-                if (tmp == "00000000")
-                    ku = "decipherOnly";
-            }
-            tag.ReadableContent = ku;
-        }
+        #endregion
     }
 }

@@ -10,8 +10,16 @@ using Asn1DecoderNet5.Interfaces;
 
 namespace Asn1DecoderNet5.Tags
 {
-    public class Tag : ITag
+    /// <summary>
+    /// Tag class
+    /// </summary>
+    public struct Tag : ITag
     {
+        /// <summary>
+        /// Creates new instance of Tag
+        /// </summary>
+        /// <param name="stream">Stream that is being currently decoded</param>
+        /// <param name="streamPosition">Position in the stream</param>
         public Tag(byte[] stream, ref int streamPosition)
         {
             TagClass = stream[streamPosition] >> 6;
@@ -60,29 +68,23 @@ namespace Asn1DecoderNet5.Tags
                    3 => $"Private_{TagNumber & 0x1F}",
                    _ => $"Uknown_{TagNumber & 0x1F}"
                };
-        }
 
-        public int TagNumber { get; set; }
-        public string TagName { get; set; }
-        public int TagClass { get; set; }
+            Content = null;
+            ReadableContent = null;
+        }   
+        public int TagNumber { get; set; }        
+        public string TagName { get; set; }       
+        public int TagClass { get; set; }        
         public bool IsConstructed { get; }
+        public bool IsUniversal => this.TagClass == 0x00;
+        public bool IsEoc => TagClass == 0x00 && TagNumber == 0x00;                
         public List<ITag> Childs { get; set; }
-        public byte[] Content { get; set; }
+        public byte[] Content { get; set; }        
         public string ReadableContent { get; set; }
-
-        public bool IsUniversal()
-        {
-            return TagClass == 0x00;
-        }
-
-        public bool IsEoc()
-        {
-            return TagClass == 0x00 && TagNumber == 0x00;
-        }
 
         public void ConvertContentToReadableContent()
         {
-            if (!IsUniversal())
+            if (!IsUniversal)
             {
                 if (Childs.Count < 1)
                 {
@@ -114,21 +116,22 @@ namespace Asn1DecoderNet5.Tags
 
         string ParseOid()
         {
-            string oid = ""; //výsledné OID
-            string buf = ""; //buffer pro čísla větší než 128(dec)
+            string oid = ""; //final OID
+            string buf = ""; //buffer for bytes larger than 128
             var hexValue = BitConverter.ToString(Content).Split("-").ToList();
-            //získá OID
+            
+            //convert the bytes to OID number
             for (int i = 0; i < hexValue.Count; i++)
             {
                 string hex = hexValue[i];
                 int num = Convert.ToInt32(hexValue[i], 16);
-                if (i == 0) //dekódování prvních dvou čísel
+                if (i == 0) //decode first two numbers
                 {
                     if (num.ToString().Length >= 2)
                     {
-                        var x = num / 40; //num.ToString()[0];
-                        var z = num % 40; //num.ToString()[1];
-                        oid += $"{x}.{z}";//int.Parse(x.ToString()) / 4 + "." + z;
+                        var x = num / 40;
+                        var z = num % 40;
+                        oid += $"{x}.{z}";
                     }
                     else
                     {
@@ -137,31 +140,28 @@ namespace Asn1DecoderNet5.Tags
                 }
                 else
                 {
-                    if (num > 127) //pokud je číslo větší než 128(dec), uloží se do bufferu
+                    if (num > 127) 
+                        buf += hexValue[i];
+                    
+                    else if (num < 128 && buf != "")
                     {
                         buf += hexValue[i];
-                    }
-                    else if (num < 128 && buf != "") //poslední číslo dlouhých čísel musí být menší než 128 a buffer nesmí být prázdný
-                    {
-                        buf += hexValue[i];
-                        var binBuf = Convert.ToString(Convert.ToInt64(buf, 16), 2); //převede obsahu z bufferu do binární soustavy
+                        var binBuf = Convert.ToString(Convert.ToInt64(buf, 16), 2); //converts the buffer into binary
                         List<string> list = new List<string>();
                         List<string> _list = new List<string>();
-                        for (int b = binBuf.Length - 8; b > -1; b = b - 8) //rozdělí obsahu bufferu po 8bit 
+                        for (int b = binBuf.Length - 8; b > -1; b -= 8) //split buffer by 8
                         {
                             list.Add(binBuf.Substring(b, 8));
                         }
                         list.Reverse();
-
-                        string last = ""; //poslední bit
                         for (int p = 0; p < list.Count; p++)
                         {
-                            if (p == 0) //zpracování prvního 8bit čísla
+                            if (p == 0) //process first byte
                             {
                                 string itm = list[0];
-                                if (itm.Length < 8) //kontrola, zda je číslo opravdu 8bit, případně ho doplní nulou
+                                if (itm.Length < 8) //check if the byte is really 8 bits long, if not, lets make it that long by adding 0s
                                     itm = itm.PadLeft(8, '0');
-                                if (itm[0] == '1') //kontrola na obsah 8. bitu čísla a případné nastavení na 0
+                                if (itm[0] == '1') //if 8th bit is one, set it to 0
                                     itm = "0" + itm.Remove(0, 1);
                                 _list.Add(itm.Remove(0, 1));
                             }
@@ -171,7 +171,8 @@ namespace Asn1DecoderNet5.Tags
                                 _list.Add(itm.Remove(0, 1));
                             }
                         }
-                        last = ""; //použití proměnné pro výsledné bin číslo
+
+                        string last = ""; //the last bit
                         foreach (var item in _list)
                         {
                             last += item;
@@ -187,6 +188,7 @@ namespace Asn1DecoderNet5.Tags
                 }
             }
 
+            //get the full OID description from OID list
             for (int i = 0; i < OID.OidList.GetLength(0); i++)
             {
                 var items = OID.OidList;
@@ -214,7 +216,7 @@ namespace Asn1DecoderNet5.Tags
             {
                 if (cp < 0x10000)
                     throw new Exception($"UTF-8 overlong encoding, codepoint encoded in 4 bytes: {cp}");
-                return Char.ConvertFromUtf32(cp);
+                return char.ConvertFromUtf32(cp);
             }
 
             for (int i = 0; i < Content.Length;)
@@ -333,6 +335,7 @@ namespace Asn1DecoderNet5.Tags
 
         string ParseTime()
         {
+            // this only works for short year format, didn't bother by parsing long year format as I have never seen it being used in modern world
             var s = ParseIsoString();
             s = "20" + s;
             s = $"{s.Substring(0, 4)}/{s.Substring(4, 2)}/{s.Substring(6, 2)} {s.Substring(8, 2)}:{s.Substring(10, 2)}:{s.Substring(12, 2)} UTC";

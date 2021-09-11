@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Asn1DecoderNet5\Asn1DecoderNet5.csproj" />
+    <PackageReference Include="Asn1DecoderNet5" Version="1.0.2" />
   </ItemGroup>
 
 </Project>

@@ -8,10 +8,10 @@ namespace Asn1Decoder.ConsoleDecoder
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Zadejte cestu k DER souboru pro dekodování:");
+            Console.WriteLine("Enter a DER file path:");
             var path = Console.ReadLine();
             if (path.StartsWith("\""))
-                path = path.Substring(1, path.Length - 2);
+                path = path[1..^1];
             var bts = File.ReadAllBytes(path);
             try
             {
