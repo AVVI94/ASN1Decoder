@@ -18,7 +18,6 @@ namespace Asn1DecoderNet5
         }
 
         #region privateMethods
-        
         internal ITag Decode_(byte[] data)
         {
             var tag = new Tag(data, ref i);
@@ -166,7 +165,7 @@ namespace Asn1DecoderNet5
         /// <param name="tag">Tag</param>
         /// <param name="structureSpacer">String used for structurizing the ASN1 output, " | " is recomended (whit the whitespaces)</param>
         /// <param name="maxContentLineLength">How many characters can one line have</param>
-        /// <returns></returns>
+        /// <returns>Formated ASN1 structure string</returns>
         public static string TagToString(ITag tag, string structureSpacer, int maxContentLineLength)
         {
             ConvertTagsContents(tag);
