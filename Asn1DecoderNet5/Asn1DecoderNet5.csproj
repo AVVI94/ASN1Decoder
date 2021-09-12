@@ -4,7 +4,7 @@
     <TargetFramework>net5.0</TargetFramework>
     <Product>ASN1DecoderNet5</Product>
     <Company />
-    <Version>1.0.4</Version>
+    <Version>1.0.5</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <AssemblyVersion>1.0.4.0</AssemblyVersion>
     <FileVersion>1.0.4.0</FileVersion>
@@ -20,6 +20,7 @@
     <PackageReleaseNotes>Description changed</PackageReleaseNotes>
     <NeutralLanguage>en</NeutralLanguage>
     <Description>Aims to make decoding DER encoded data into ASN1 structure human readable very easy</Description>
+	  <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
