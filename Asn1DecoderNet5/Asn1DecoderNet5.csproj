@@ -4,10 +4,10 @@
     <TargetFramework>net5.0</TargetFramework>
     <Product>ASN1DecoderNet5</Product>
     <Company />
-    <Version>1.0.5</Version>
+    <Version>1.0.6</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <AssemblyVersion>1.0.4.0</AssemblyVersion>
-    <FileVersion>1.0.4.0</FileVersion>
+    <AssemblyVersion>1.0.6.0</AssemblyVersion>
+    <FileVersion>1.0.6.0</FileVersion>
     <PackageProjectUrl>https://github.com/AVVI94/ASN1Decoder</PackageProjectUrl>
     <Authors>Jan Král</Authors>
     <Copyright>Copyright © Jan Král</Copyright>
@@ -17,10 +17,14 @@
     <PackageIcon>ASN1Logo.PNG</PackageIcon>
     <PackageIconUrl />
     <PackageTags>certificate, asn1, asn, der, pem, cer, decoder, crypto</PackageTags>
-    <PackageReleaseNotes>Description changed</PackageReleaseNotes>
+    <PackageReleaseNotes>Fixed maximum line length</PackageReleaseNotes>
     <NeutralLanguage>en</NeutralLanguage>
     <Description>Aims to make decoding DER encoded data into ASN1 structure human readable very easy</Description>
 	  <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
 
   <ItemGroup>

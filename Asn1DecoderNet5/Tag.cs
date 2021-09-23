@@ -71,15 +71,15 @@ namespace Asn1DecoderNet5.Tags
 
             Content = null;
             ReadableContent = null;
-        }   
-        public int TagNumber { get; set; }        
-        public string TagName { get; set; }       
-        public int TagClass { get; set; }        
+        }
+        public int TagNumber { get; set; }
+        public string TagName { get; set; }
+        public int TagClass { get; set; }
         public bool IsConstructed { get; }
         public bool IsUniversal => this.TagClass == 0x00;
-        public bool IsEoc => TagClass == 0x00 && TagNumber == 0x00;                
+        public bool IsEoc => TagClass == 0x00 && TagNumber == 0x00;
         public List<ITag> Childs { get; set; }
-        public byte[] Content { get; set; }        
+        public byte[] Content { get; set; }
         public string ReadableContent { get; set; }
 
         public void ConvertContentToReadableContent()
@@ -119,7 +119,7 @@ namespace Asn1DecoderNet5.Tags
             string oid = ""; //final OID
             string buf = ""; //buffer for bytes larger than 128
             var hexValue = BitConverter.ToString(Content).Split("-").ToList();
-            
+
             //convert the bytes to OID number
             for (int i = 0; i < hexValue.Count; i++)
             {
@@ -140,9 +140,9 @@ namespace Asn1DecoderNet5.Tags
                 }
                 else
                 {
-                    if (num > 127) 
+                    if (num > 127)
                         buf += hexValue[i];
-                    
+
                     else if (num < 128 && buf != "")
                     {
                         buf += hexValue[i];
@@ -224,19 +224,19 @@ namespace Asn1DecoderNet5.Tags
                 var c = Content[i++];
                 if (c < 0x80)
                 {
-                    var _c = (char)c;
+                    var _c =  Convert.ToChar(c);
                     sb.Append(_c);
                 }
                 else if (c < 0xC0)
                     throw new Exception($"Invalid UTF-8 starting byte: {c}");
                 else if (c < 0xE0)
                 {
-                    var _c = (char)(((c & 0x1F) << 6) | Ex(Content[i++]));
+                    var _c = Convert.ToChar(((c & 0x1F) << 6) | Ex(Content[i++]));
                     sb.Append(_c);
                 }
                 else if (c < 0xF0)
                 {
-                    var _c = (char)(((c & 0x0F) << 12) | (Ex(Content[i++]) << 6) | Ex(Content[i++]));
+                    var _c = Convert.ToChar(((c & 0x0F) << 12) | (Ex(Content[i++]) << 6) | Ex(Content[i++]));
                     sb.Append(_c);
                 }
                 else if (c < 248)

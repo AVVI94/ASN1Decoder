@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Asn1DecoderNet5": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}

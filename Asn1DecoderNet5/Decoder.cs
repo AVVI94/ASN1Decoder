@@ -208,22 +208,31 @@ namespace Asn1DecoderNet5
                     if (tag.ReadableContent.Length > maxContentLineLength)
                     {
                         var spacer = MultiplyString(structureSpacer, lvl + 1);
+                        var firstSplit = tag.ReadableContent.Split("\r\n");
 
-                        var tmpList = new List<string>();
-                        for (int p = 0; p < tag.ReadableContent.Length;)
+                        for (int y = 0; y < firstSplit.Length; y++)
                         {
-                            tmpList.Add(spacer + tag.ReadableContent.Substring(p, p + 63 < tag.ReadableContent.Length ? 63 : tag.ReadableContent.Length - p));
-                            p += maxContentLineLength;
+
+                            var split = firstSplit[y].Select((c, index) => new { c, index })
+                                                       .GroupBy(x => x.index / maxContentLineLength)
+                                                       .Select(group => group.Select(elem => elem.c))
+                                                       .Select(chars => new string(chars.ToArray())).ToArray();
+
+                            for (int i = 0; i < split.Length; i++)
+                            {
+                                split[i] = spacer + split[i];
+                            }
+                            firstSplit[y] = string.Join(Environment.NewLine, split);
                         }
+
                         tag.ReadableContent = Environment.NewLine;
-                        tag.ReadableContent += string.Join(Environment.NewLine, tmpList);
+                        tag.ReadableContent += string.Join(Environment.NewLine, firstSplit);
 
                         tmp += $"{MultiplyString(structureSpacer, lvl)}{tag.TagName} {tag.ReadableContent}{Environment.NewLine}";
                     }
                     else
                         tmp += $"{MultiplyString(structureSpacer, lvl)}{tag.TagName} {tag.ReadableContent}{Environment.NewLine}";
                 }
-
 
                 return tmp;
             }
