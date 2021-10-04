@@ -208,7 +208,7 @@ namespace Asn1DecoderNet5
                     if (tag.ReadableContent.Length > maxContentLineLength)
                     {
                         var spacer = MultiplyString(structureSpacer, lvl + 1);
-                        var firstSplit = tag.ReadableContent.Split("\r\n");
+                        var firstSplit = tag.ReadableContent.Replace("\r\n", "\n").Split("\n");
 
                         for (int y = 0; y < firstSplit.Length; y++)
                         {
@@ -227,6 +227,8 @@ namespace Asn1DecoderNet5
 
                         tag.ReadableContent = Environment.NewLine;
                         tag.ReadableContent += string.Join(Environment.NewLine, firstSplit);
+
+                        tag.ReadableContent = tag.ReadableContent.TrimEnd();
 
                         tmp += $"{MultiplyString(structureSpacer, lvl)}{tag.TagName} {tag.ReadableContent}{Environment.NewLine}";
                     }
