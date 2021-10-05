@@ -12,7 +12,7 @@ namespace Asn1Decoder.ConsoleDecoder
             Console.WriteLine("Enter a DER file path:");
             var path = Console.ReadLine();
             if (path.StartsWith("\""))
-                path = path[1..^1];
+                path = path.Remove(0,1).Remove(path.Length - 2, 1);
             var bts = path.EndsWith(".der") ? File.ReadAllBytes(path) : ConvertPemStringTyByteArray(File.ReadAllText(path));
             try
             {

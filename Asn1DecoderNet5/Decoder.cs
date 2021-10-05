@@ -52,8 +52,11 @@ namespace Asn1DecoderNet5
             {
                 if (len == null)
                     throw new Exception($"Cannot skip over an invalid tag with indefinite length at offset {start}");
-
+#if NET5_0_OR_GREATER
                 tag.Content = data[start..(len.Value + start)];
+#else
+                Array.Copy(data, start, tag.Content = new byte[len.Value], 0, len.Value);
+#endif
                 i = start + Math.Abs(len.Value);
             }
             return tag;
@@ -118,7 +121,7 @@ namespace Asn1DecoderNet5
         {
             var hex = BitConverter.ToString(tag.Content);
             string bin = "";
-            foreach (var item in hex.Split("-"))
+            foreach (var item in hex.Split('-'))
             {
                 bin += Convert.ToString(Convert.ToInt64(item, 16), 2);
             }
@@ -155,7 +158,7 @@ namespace Asn1DecoderNet5
         /// <returns><see cref="ITag"/> containing the decoded sequence</returns>
         public static ITag Decode(byte[] data)
         {
-            Decoder dc = new();
+            Decoder dc = new Decoder();
             return dc.Decode_(data);
         }
 
@@ -182,33 +185,33 @@ namespace Asn1DecoderNet5
                 return tmp;
             }
 
-            string TagToStringRecurse(ITag tag, int lvl)
+            string TagToStringRecurse(ITag _tag, int lvl)
             {
                 string tmp = "";
-                if (tag.Childs.Count > 0)
+                if (_tag.Childs.Count > 0)
                 {
-                    tmp += $"{MultiplyString(structureSpacer, lvl)}{tag.TagName}{Environment.NewLine}";
-                    foreach (var child in tag.Childs)
+                    tmp += $"{MultiplyString(structureSpacer, lvl)}{_tag.TagName}{Environment.NewLine}";
+                    foreach (var child in _tag.Childs)
                     {
                         tmp += TagToStringRecurse(child, lvl + 1);
                     }
                 }
                 else
                 {
-                    if (tag.TagNumber == 6)
+                    if (_tag.TagNumber == 6)
                     {
-                        _lastOid = tag.ReadableContent;
+                        _lastOid = _tag.ReadableContent;
                     }
                     #region OID_SpecificProcessing
-                    if (tag.TagNumber == 3 && _lastOid == "2.5.29.15, keyUsage, X.509 extension")
+                    if (_tag.TagNumber == 3 && _lastOid == "2.5.29.15, keyUsage, X.509 extension")
                     {
-                        ProcessKeyUsage(tag, tmp);
+                        ProcessKeyUsage(_tag, tmp);
                     }
                     #endregion
-                    if (tag.ReadableContent.Length > maxContentLineLength)
+                    if (_tag.ReadableContent.Length > maxContentLineLength)
                     {
                         var spacer = MultiplyString(structureSpacer, lvl + 1);
-                        var firstSplit = tag.ReadableContent.Replace("\r\n", "\n").Split("\n");
+                        var firstSplit = _tag.ReadableContent.Replace("\r\n", "\n").Split('\n');
 
                         for (int y = 0; y < firstSplit.Length; y++)
                         {
@@ -225,23 +228,23 @@ namespace Asn1DecoderNet5
                             firstSplit[y] = string.Join(Environment.NewLine, split);
                         }
 
-                        tag.ReadableContent = Environment.NewLine;
-                        tag.ReadableContent += string.Join(Environment.NewLine, firstSplit);
+                        _tag.ReadableContent = Environment.NewLine;
+                        _tag.ReadableContent += string.Join(Environment.NewLine, firstSplit);
 
-                        tag.ReadableContent = tag.ReadableContent.TrimEnd();
+                        _tag.ReadableContent = _tag.ReadableContent.TrimEnd();
 
-                        tmp += $"{MultiplyString(structureSpacer, lvl)}{tag.TagName} {tag.ReadableContent}{Environment.NewLine}";
+                        tmp += $"{MultiplyString(structureSpacer, lvl)}{_tag.TagName} {_tag.ReadableContent}{Environment.NewLine}";
                     }
                     else
-                        tmp += $"{MultiplyString(structureSpacer, lvl)}{tag.TagName} {tag.ReadableContent}{Environment.NewLine}";
+                        tmp += $"{MultiplyString(structureSpacer, lvl)}{_tag.TagName} {_tag.ReadableContent}{Environment.NewLine}";
                 }
 
                 return tmp;
             }
 
-            void ConvertTagsContents(ITag tag)
+            void ConvertTagsContents(ITag _tag)
             {
-                foreach (var child in tag.Childs)
+                foreach (var child in _tag.Childs)
                 {
                     if (child.Childs.Count > 0)
                         ConvertTagsContents(child);

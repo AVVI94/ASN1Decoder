@@ -8,26 +8,26 @@ using Asn1DecoderNet5.Tags;
 namespace Asn1DecoderNet5.Interfaces
 {
     /// <summary>
-    /// 
+    ///
     /// </summary>
     public interface ITag
     {
         /// <summary>
-        /// The Tag identifier in decimal format  
+        /// The Tag identifier in decimal format
         /// <br/>
         /// For more information visit: <see href="https://docs.microsoft.com/en-us/windows/win32/seccertenroll/about-encoded-tag-bytes"/>
         /// </summary>
         int TagNumber { get; set; }
 
         /// <summary>
-        /// The tag identifier in human readable form 
+        /// The tag identifier in human readable form
         /// <br/>
         /// For more information visit: <see href="https://docs.microsoft.com/en-us/windows/win32/seccertenroll/about-encoded-tag-bytes"/>
         /// </summary>
         string TagName { get; set; }
 
         /// <summary>
-        /// Tag class 
+        /// Tag class
         /// <br/>
         /// For more information visit: <see href="https://docs.microsoft.com/en-us/windows/win32/seccertenroll/about-encoded-tag-bytes"/>
         /// </summary>
@@ -59,7 +59,7 @@ namespace Asn1DecoderNet5.Interfaces
         /// <summary>
         /// Human readable form of actual content, this should only be set when the <see cref="Childs"/> list is empty.
         /// </summary>
-        public string ReadableContent { get; set; }
+        string ReadableContent { get; set; }
 
         /// <summary>
         /// Converts the content from bytes to readable string

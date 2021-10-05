@@ -2,10 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using System.Security.Cryptography;
 using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using Asn1DecoderNet5.Interfaces;
 
 namespace Asn1DecoderNet5.Tags
@@ -25,9 +22,10 @@ namespace Asn1DecoderNet5.Tags
             TagClass = stream[streamPosition] >> 6;
             TagNumber = stream[streamPosition];
             IsConstructed = ((stream[streamPosition] & 0x20) != 0);
-            Childs = new();
+            Childs = new List<ITag>();
             streamPosition++;
 
+#if NET5_0_OR_GREATER
             TagName =
                TagClass switch
                {
@@ -68,20 +66,156 @@ namespace Asn1DecoderNet5.Tags
                    3 => $"Private_{TagNumber & 0x1F}",
                    _ => $"Uknown_{TagNumber & 0x1F}"
                };
-
+#else
+            switch (TagClass)
+            {
+                case 0:
+                    switch (TagNumber)
+                    {
+                        case 0:
+                            TagName = "EOC";
+                            break;
+                        case 1:
+                            TagName = "BOOLEAN";
+                            break;
+                        case 2:
+                            TagName = "INTEGER";
+                            break;
+                        case 3:
+                            TagName = "BIT_STRING";
+                            break;
+                        case 4:
+                            TagName = "OCTET_STRING";
+                            break;
+                        case 5:
+                            TagName = "NULL";
+                            break;
+                        case 6:
+                            TagName = "OBJECT_IDENTIFIER";
+                            break;
+                        case 7:
+                            TagName = "ObjectDescriptor";
+                            break;
+                        case 8:
+                            TagName = "EXTERNAL";
+                            break;
+                        case 9:
+                            TagName = "REAL";
+                            break;
+                        case 10:
+                            TagName = "ENUMERATED";
+                            break;
+                        case 11:
+                            TagName = "EMBEDDED_PDV";
+                            break;
+                        case 12:
+                            TagName = "UTF8String";
+                            break;
+                        case 48:
+                            TagName = "SEQUENCE";
+                            break;
+                        case 49:
+                            TagName = "SET";
+                            break;
+                        case 18:
+                            TagName = "NumericString";
+                            break;
+                        case 19:
+                            TagName = "PrintableString";
+                            break;
+                        case 20:
+                            TagName = "TeletexString";
+                            break;
+                        case 21:
+                            TagName = "VideotexString";
+                            break;
+                        case 22:
+                            TagName = "IA5String";
+                            break;
+                        case 23:
+                            TagName = "UTCTime";
+                            break;
+                        case 24:
+                            TagName = "GeneralizedTime";
+                            break;
+                        case 25:
+                            TagName = "GraphicString";
+                            break;
+                        case 26:
+                            TagName = "VisibleString";
+                            break;
+                        case 27:
+                            TagName = "GeneralString";
+                            break;
+                        case 28:
+                            TagName = "UniversalString";
+                            break;
+                        case 30:
+                            TagName = "BMPString";
+                            break;
+                        default:
+                            TagName = $"Universal_{TagNumber}";
+                            break;
+                    }
+                    break;
+                case 1:
+                    TagName = $"Application_{TagNumber & 0x1F}";
+                    break;
+                case 2:
+                    TagName = $"[{TagNumber & 0x1F}]";
+                    break;
+                case 3:
+                    TagName = $"Private_{TagNumber & 0x1F}";
+                    break;
+                default:
+                    TagName = $"Uknown_{TagNumber & 0x1F}";
+                    break;
+            }
+#endif
             Content = null;
             ReadableContent = null;
         }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
         public int TagNumber { get; set; }
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
         public string TagName { get; set; }
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
         public int TagClass { get; set; }
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
         public bool IsConstructed { get; }
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
         public bool IsUniversal => this.TagClass == 0x00;
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
         public bool IsEoc => TagClass == 0x00 && TagNumber == 0x00;
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
         public List<ITag> Childs { get; set; }
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
         public byte[] Content { get; set; }
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
         public string ReadableContent { get; set; }
 
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
         public void ConvertContentToReadableContent()
         {
             if (!IsUniversal)
@@ -95,7 +229,7 @@ namespace Asn1DecoderNet5.Tags
                 return;
             }
 #pragma warning disable CS8509 // The switch expression does not handle all possible values of its input type (it is not exhaustive).
-
+#if NET5_0_OR_GREATER
             ReadableContent = (TagNumber & 0x1F) switch
             {
                 0x01 => ParseBoolean(),
@@ -111,6 +245,34 @@ namespace Asn1DecoderNet5.Tags
                 0x1E => ParseBmpString(),
                 0x17 or 0x18 => ParseTime(),
             };
+#else
+            switch (TagNumber & 0x1F)
+            {
+                case 0x01: ReadableContent = ParseBoolean(); break;
+                case 0x02: ReadableContent = ParseInteger(); break;
+                case 0x03: ReadableContent = ParseBitString(); break;
+                case 0x04: ReadableContent = ParseOctetString(); break;
+                case 0x05: ReadableContent = ""; break;
+                case 0x06: ReadableContent = ParseOid(); break;
+                case 0x0A: ReadableContent = ParseInteger(); break;
+                case 0x10: ReadableContent = ""; break;
+                case 0x11: ReadableContent = ""; break;
+                case 0x0C: ReadableContent = ParseUtfString(); break;
+                case 0x12:
+                case 0x13:
+                case 0x14:
+                case 0x15:
+                case 0x16:
+                case 0x1A:
+                case 0x1B:
+                    ReadableContent = ParseIsoString();
+                    break;
+                case 0x1E: ReadableContent = ParseBmpString(); break;
+                case 0x17: ReadableContent = ParseTime(); break;
+                default:
+                    break;
+            }
+#endif
 #pragma warning restore CS8509
         }
 
@@ -118,12 +280,11 @@ namespace Asn1DecoderNet5.Tags
         {
             string oid = ""; //final OID
             string buf = ""; //buffer for bytes larger than 128
-            var hexValue = BitConverter.ToString(Content).Split("-").ToList();
+            var hexValue = BitConverter.ToString(Content).Split('-').ToList();
 
             //convert the bytes to OID number
             for (int i = 0; i < hexValue.Count; i++)
             {
-                string hex = hexValue[i];
                 int num = Convert.ToInt32(hexValue[i], 16);
                 if (i == 0) //decode first two numbers
                 {
@@ -204,7 +365,7 @@ namespace Asn1DecoderNet5.Tags
 
         string ParseUtfString()
         {
-            StringBuilder sb = new();
+            StringBuilder sb = new StringBuilder();
             int Ex(byte c)
             {
                 if (c < 0x80 || c > 0xC0)
@@ -224,7 +385,7 @@ namespace Asn1DecoderNet5.Tags
                 var c = Content[i++];
                 if (c < 0x80)
                 {
-                    var _c =  Convert.ToChar(c);
+                    var _c = Convert.ToChar(c);
                     sb.Append(_c);
                 }
                 else if (c < 0xC0)
@@ -252,7 +413,7 @@ namespace Asn1DecoderNet5.Tags
 
         string ParseIsoString()
         {
-            StringBuilder sb = new();
+            StringBuilder sb = new StringBuilder();
 
             foreach (var c in Content)
             {
@@ -264,7 +425,7 @@ namespace Asn1DecoderNet5.Tags
 
         string ParseBmpString()
         {
-            StringBuilder sb = new();
+            StringBuilder sb = new StringBuilder();
             byte hi, low;
             for (int i = 0; i < Content.Length;)
             {
@@ -278,8 +439,8 @@ namespace Asn1DecoderNet5.Tags
 
         string ParseInteger()
         {
-            StringBuilder sb = new();
-            foreach (var hex in BitConverter.ToString(Content).Split("-").ToList())
+            StringBuilder sb = new StringBuilder();
+            foreach (var hex in BitConverter.ToString(Content).Split('-').ToList())
             {
                 sb.Append(hex);
             }
@@ -292,8 +453,7 @@ namespace Asn1DecoderNet5.Tags
             if (unusedBits > 7)
                 throw new Exception($"Invalid BitString with unused bits {unusedBits}");
 
-            int lengthBit = (Content.Length << 3) - unusedBits;
-            StringBuilder sb = new();
+            StringBuilder sb = new StringBuilder();
 
             for (int i = 1; i < Content.Length; ++i)
             {
@@ -313,7 +473,7 @@ namespace Asn1DecoderNet5.Tags
         {
             try
             {
-                StringBuilder sb = new();
+                StringBuilder sb = new StringBuilder();
                 char c;
                 var s = ParseUtfString();
                 for (int i = 0; i < s.Length; ++i)
