@@ -278,86 +278,96 @@ namespace Asn1DecoderNet5.Tags
 
         string ParseOid()
         {
-            string oid = ""; //final OID
-            string buf = ""; //buffer for bytes larger than 128
             var hexValue = BitConverter.ToString(Content).Split('-').ToList();
 
-            //convert the bytes to OID number
-            for (int i = 0; i < hexValue.Count; i++)
-            {
-                int num = Convert.ToInt32(hexValue[i], 16);
-                if (i == 0) //decode first two numbers
-                {
-                    if (num.ToString().Length >= 2)
-                    {
-                        var x = num / 40;
-                        var z = num % 40;
-                        oid += $"{x}.{z}";
-                    }
-                    else
-                    {
-                        oid += $"0.{num}";
-                    }
-                }
-                else
-                {
-                    if (num > 127)
-                        buf += hexValue[i];
+            var oid = ConvertBytesToOidString(hexValue);
 
-                    else if (num < 128 && buf != "")
-                    {
-                        buf += hexValue[i];
-                        var binBuf = Convert.ToString(Convert.ToInt64(buf, 16), 2); //converts the buffer into binary
-                        List<string> list = new List<string>();
-                        List<string> _list = new List<string>();
-                        for (int b = binBuf.Length - 8; b > -1; b -= 8) //split buffer by 8
-                        {
-                            list.Add(binBuf.Substring(b, 8));
-                        }
-                        list.Reverse();
-                        for (int p = 0; p < list.Count; p++)
-                        {
-                            if (p == 0) //process first byte
-                            {
-                                string itm = list[0];
-                                if (itm.Length < 8) //check if the byte is really 8 bits long, if not, lets make it that long by adding 0s
-                                    itm = itm.PadLeft(8, '0');
-                                if (itm[0] == '1') //if 8th bit is one, set it to 0
-                                    itm = "0" + itm.Remove(0, 1);
-                                _list.Add(itm.Remove(0, 1));
-                            }
-                            else
-                            {
-                                string itm = list[p];
-                                _list.Add(itm.Remove(0, 1));
-                            }
-                        }
-
-                        string last = ""; //the last bit
-                        foreach (var item in _list)
-                        {
-                            last += item;
-                        }
-
-                        oid += $".{Convert.ToInt32(last, 2)}";
-                        buf = "";
-                    }
-                    else
-                    {
-                        oid += $".{num}";
-                    }
-                }
-            }
+            var items = OID.OidList;
 
             //get the full OID description from OID list
             for (int i = 0; i < OID.OidList.GetLength(0); i++)
             {
-                var items = OID.OidList;
-
                 if (items[i, 0] == oid)
                 {
                     oid = $"{items[i, 0]}, {items[i, 1]}{(items[i, 2] == "" ? "" : $", {items[i, 2]}")}{(items[i, 3] == "" ? "" : $", {items[i, 3]}")}";
                 }
+            }
+
+            return oid;
+        }
+
+        private static string ConvertBytesToOidString(List<string> hexValue)
+        {
+            var oid = "";
+            var buf = "";
+
+            var firstByte = Convert.ToInt32(hexValue[0], 16);
+            if (firstByte.ToString().Length >= 2)
+            {
+                var x = firstByte / 40;
+                var z = firstByte % 40;
+                oid += $"{x}.{z}";
+            }
+            else
+            {
+                oid += $"0.{firstByte}";
+            }
+            for (int i = 1; i < hexValue.Count; i++)
+            {
+                int num = Convert.ToInt32(hexValue[i], 16);
+
+                if (num > 127)
+                {
+                    buf += hexValue[i];
+                    continue;
+                }
+
+                if (num < 128 && buf != "")
+                {
+                    buf += hexValue[i];
+                    var binBuf = Convert.ToString(Convert.ToInt64(buf, 16), 2); //converts the buffer into binary
+                    List<string> list = new List<string>();
+                    List<string> _list = new List<string>();
+
+                    for (int b = binBuf.Length - 8; b > -1; b -= 8) //split buffer by 8
+                    {
+                        list.Add(binBuf.Substring(b, 8));
+                    }
+
+                    list.Reverse();
+
+                    for (int p = 0; p < list.Count; p++)
+                    {
+                        if (p != 0) //process first byte
+                        {
+                            string itm = list[0];
+                            if (itm.Length < 8) //check if the byte is really 8 bits long, if not, lets make it that long by adding 0s
+                                itm = itm.PadLeft(8, '0');
+                            if (itm[0] == '1') //if 8th bit is 1, set it to 0
+                                itm = "0" + itm.Remove(0, 1);
+                            _list.Add(itm.Remove(0, 1));
+                        }
+                        else
+                        {
+                            string itm = list[p];
+                            _list.Add(itm.Remove(0, 1));
+                        }
+                    }
+
+                    string last = "";
+                    foreach (var item in _list)
+                    {
+                        last += item;
+                    }
+
+                    oid += $".{Convert.ToInt32(last, 2)}";
+                    buf = "";
+                }
+                else
+                {
+                    oid += $".{num}";
+                }
+
             }
 
             return oid;

@@ -11,113 +11,95 @@ namespace Asn1DecoderNet5
     /// <summary>
     /// ASN1 Decoder
     /// </summary>
-    public sealed class Decoder
+    public static class Decoder
     {
-        internal Decoder()
+        #region privateMethods    
+        private static void ConvertTagsContentsToReadableStringsRecurse(ITag _tag)
         {
+            foreach (var child in _tag.Childs)
+            {
+                if (child.Childs.Count > 0)
+                    ConvertTagsContentsToReadableStringsRecurse(child);
+                else
+                    child.ConvertContentToReadableContent();
+            }
         }
 
-        #region privateMethods
-        internal ITag Decode_(byte[] data)
+        private static string TagToStringRecurse(ITag _tag, int lvl, string structureSpacer, int maxContentLineLength)
         {
-            var tag = new Tag(data, ref i);
-            var len = DecodeLength(data);
-            var start = i;
-
-            if (tag.IsConstructed)
+            string tmp = "";
+            if (_tag.Childs.Count > 0)
             {
-                GetChilds();
-            }
-            else if (tag.IsUniversal && (tag.TagNumber == 0x03 || tag.TagNumber == 0x04))
-            {
-                try
+                tmp += $"{MultiplyString(structureSpacer, lvl)}{_tag.TagName}{Environment.NewLine}";
+                foreach (var child in _tag.Childs)
                 {
-                    if (tag.TagNumber == 0x03)
-                        if (data[++i] != 0)
-                            throw new Exception("BitString with unused bits cannot encapsulate");
-                    GetChilds();
-                    foreach (var ch in tag.Childs)
-                    {
-                        if (ch.IsEoc)
-                            throw new Exception("EOC is not supposed to be actual content");
-                    }
-                }
-                catch
-                {
-                    tag.Childs.Clear();
+                    tmp += TagToStringRecurse(child, lvl + 1, structureSpacer, maxContentLineLength);
                 }
             }
-
-            if (tag.Childs.Count == 0)
+            else
             {
-                if (len == null)
-                    throw new Exception($"Cannot skip over an invalid tag with indefinite length at offset {start}");
-#if NET5_0_OR_GREATER
-                tag.Content = data[start..(len.Value + start)];
-#else
-                Array.Copy(data, start, tag.Content = new byte[len.Value], 0, len.Value);
-#endif
-                i = start + Math.Abs(len.Value);
-            }
-            return tag;
-
-            void GetChilds()
-            {
-                if (len != null)
+                if (_tag.TagNumber == 6)
                 {
-                    var end = start + len;
-                    if (end > data.Length)
-                        throw new IndexOutOfRangeException($"Container at offset {start} has a length of {len}, which is past the end of the stream");
+                    _lastOid = _tag.ReadableContent;
+                }
+                #region OID_SpecificProcessing
+                if (_tag.TagNumber == 3 && _lastOid == "2.5.29.15, keyUsage, X.509 extension")
+                {
+                    ConvertKeyUsageFromBitStringToReadableString(_tag, tmp);
+                }
+                #endregion
+                if (maxContentLineLength > 0 && _tag.ReadableContent.Length > maxContentLineLength)
+                {
+                    string[] firstSplit = FormatContentByMaxCharactersPerLine(_tag, lvl, structureSpacer, maxContentLineLength);
 
-                    while (i < end)
-                    {
-                        tag.Childs.Add(Decode_(data));
-                    }
-                    if (i != end)
-                        throw new IndexOutOfRangeException($"Content size is not correct for container at offset {start}");
+                    _tag.ReadableContent = Environment.NewLine;
+                    _tag.ReadableContent += string.Join(Environment.NewLine, firstSplit);
+
+                    _tag.ReadableContent = _tag.ReadableContent.TrimEnd();
+
+                    tmp += $"{MultiplyString(structureSpacer, lvl)}{_tag.TagName} {_tag.ReadableContent}{Environment.NewLine}";
                 }
                 else
-                {
-                    try
-                    {
-                        for (; ; )
-                        {
-                            var child = Decode_(data);
-                            if (child.IsEoc)
-                                break;
-                            tag.Childs.Add(child);
-                        }
-                        len = start - i;
-                    }
-                    catch (Exception e)
-                    {
-                        throw new Exception($"Exception while decoding undefined length content at offset {start}", e);
-                    }
-                }
+                    tmp += $"{MultiplyString(structureSpacer, lvl)}{_tag.TagName} {_tag.ReadableContent}{Environment.NewLine}";
             }
+
+            return tmp;
         }
 
-        int? DecodeLength(byte[] data)
+        private static string[] FormatContentByMaxCharactersPerLine(ITag _tag, int lvl, string structureSpacer, int maxContentLineLength)
         {
-            var buf = (int)data[i++];
-            var len = buf & 0x7f;
+            var spacer = MultiplyString(structureSpacer, lvl + 1);
+            var firstSplit = _tag.ReadableContent.Replace("\r\n", "\n").Split('\n');
 
-            if (len == buf)
-                return len;
-            if (len == 0)
-                return null;
-            if (len > 6)
-                throw new ArgumentOutOfRangeException("Length over 48 bits not supported;");
-
-            buf = 0;
-            for (int y = 0; y < len; y++)
+            for (int y = 0; y < firstSplit.Length; y++)
             {
-                buf = (buf * 256) + data[i++];
+
+                var split = firstSplit[y].Select((c, index) => new { c, index })
+                                           .GroupBy(x => x.index / maxContentLineLength)
+                                           .Select(group => group.Select(elem => elem.c))
+                                           .Select(chars => new string(chars.ToArray())).ToArray();
+
+                for (int i = 0; i < split.Length; i++)
+                {
+                    split[i] = spacer + split[i];
+                }
+                firstSplit[y] = string.Join(Environment.NewLine, split);
             }
 
-            return buf;
+            return firstSplit;
         }
-        static void ProcessKeyUsage(ITag tag, string tmp)
+
+        private static string MultiplyString(string to, int multiplier)
+        {
+            string tmp = "";
+            for (int i = 0; i < multiplier; i++)
+            {
+                tmp += to;
+            }
+            return tmp;
+        }
+
+        private static void ConvertKeyUsageFromBitStringToReadableString(ITag tag, string tmp)
         {
             var hex = BitConverter.ToString(tag.Content);
             string bin = "";
@@ -144,10 +126,9 @@ namespace Asn1DecoderNet5
         #endregion
 
         #region privateFields
-        //"global" stream position
-        int i = 0;
 
         static string _lastOid;
+
         #endregion
 
         #region publicAPI
@@ -158,102 +139,22 @@ namespace Asn1DecoderNet5
         /// <returns><see cref="ITag"/> containing the decoded sequence</returns>
         public static ITag Decode(byte[] data)
         {
-            Decoder dc = new Decoder();
-            return dc.Decode_(data);
+            return new ActualDecoder().Decode(data);
         }
 
         /// <summary>
-        /// Converts Tag (and all its childs) into readable string
+        /// Converts Tag (and all its childs) into a readable string
         /// </summary>
         /// <param name="tag">Tag</param>
         /// <param name="structureSpacer">String used for structurizing the ASN1 output, " | " is recomended (whit the whitespaces)</param>
-        /// <param name="maxContentLineLength">How many characters can one line have</param>
+        /// <param name="maxContentLineLength">How many content characters can be in single line, zero for unlimited</param>
         /// <returns>Formated ASN1 structure string</returns>
         public static string TagToString(ITag tag, string structureSpacer, int maxContentLineLength)
         {
-            ConvertTagsContents(tag);
-            return TagToStringRecurse(tag, 0);
-
-            #region localFunctions
-            string MultiplyString(string to, int multiplier)
-            {
-                string tmp = "";
-                for (int i = 0; i < multiplier; i++)
-                {
-                    tmp += to;
-                }
-                return tmp;
-            }
-
-            string TagToStringRecurse(ITag _tag, int lvl)
-            {
-                string tmp = "";
-                if (_tag.Childs.Count > 0)
-                {
-                    tmp += $"{MultiplyString(structureSpacer, lvl)}{_tag.TagName}{Environment.NewLine}";
-                    foreach (var child in _tag.Childs)
-                    {
-                        tmp += TagToStringRecurse(child, lvl + 1);
-                    }
-                }
-                else
-                {
-                    if (_tag.TagNumber == 6)
-                    {
-                        _lastOid = _tag.ReadableContent;
-                    }
-                    #region OID_SpecificProcessing
-                    if (_tag.TagNumber == 3 && _lastOid == "2.5.29.15, keyUsage, X.509 extension")
-                    {
-                        ProcessKeyUsage(_tag, tmp);
-                    }
-                    #endregion
-                    if (_tag.ReadableContent.Length > maxContentLineLength)
-                    {
-                        var spacer = MultiplyString(structureSpacer, lvl + 1);
-                        var firstSplit = _tag.ReadableContent.Replace("\r\n", "\n").Split('\n');
-
-                        for (int y = 0; y < firstSplit.Length; y++)
-                        {
-
-                            var split = firstSplit[y].Select((c, index) => new { c, index })
-                                                       .GroupBy(x => x.index / maxContentLineLength)
-                                                       .Select(group => group.Select(elem => elem.c))
-                                                       .Select(chars => new string(chars.ToArray())).ToArray();
-
-                            for (int i = 0; i < split.Length; i++)
-                            {
-                                split[i] = spacer + split[i];
-                            }
-                            firstSplit[y] = string.Join(Environment.NewLine, split);
-                        }
-
-                        _tag.ReadableContent = Environment.NewLine;
-                        _tag.ReadableContent += string.Join(Environment.NewLine, firstSplit);
-
-                        _tag.ReadableContent = _tag.ReadableContent.TrimEnd();
-
-                        tmp += $"{MultiplyString(structureSpacer, lvl)}{_tag.TagName} {_tag.ReadableContent}{Environment.NewLine}";
-                    }
-                    else
-                        tmp += $"{MultiplyString(structureSpacer, lvl)}{_tag.TagName} {_tag.ReadableContent}{Environment.NewLine}";
-                }
-
-                return tmp;
-            }
-
-            void ConvertTagsContents(ITag _tag)
-            {
-                foreach (var child in _tag.Childs)
-                {
-                    if (child.Childs.Count > 0)
-                        ConvertTagsContents(child);
-                    else
-                        child.ConvertContentToReadableContent();
-                }
-            }
-            #endregion
+            ConvertTagsContentsToReadableStringsRecurse(tag);
+            return TagToStringRecurse(tag, 0, structureSpacer, maxContentLineLength);
         }
+        
         #endregion
     }
 }
