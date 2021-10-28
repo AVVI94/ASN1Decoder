@@ -8,8 +8,9 @@ namespace Asn1DecoderNet5
 {
     public static class OID
     {
-       public static readonly string[,] OidList =
-            {{"0.2.262.1.10","Telesec","Deutsche Telekom",""},
+        public static readonly string[,] OidList =
+             {
+{"0.2.262.1.10","Telesec","Deutsche Telekom",""},
 {"0.2.262.1.10.0","extension","Telesec",""},
 {"0.2.262.1.10.1","mechanism","Telesec",""},
 {"0.2.262.1.10.1.0","authentication","Telesec mechanism",""},

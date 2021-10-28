@@ -16,10 +16,10 @@
 		</TargetFrameworks>
 		<Product>ASN1DecoderNet5</Product>
 		<Company />
-		<Version>1.0.8</Version>
+		<Version>1.1</Version>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<AssemblyVersion>1.0.8.0</AssemblyVersion>
-		<FileVersion>1.0.8.0</FileVersion>
+		<AssemblyVersion>1.1.0.0</AssemblyVersion>
+		<FileVersion>1.1.0.0</FileVersion>
 		<PackageProjectUrl>https://github.com/AVVI94/ASN1Decoder</PackageProjectUrl>
 		<Authors>Jan Král</Authors>
 		<Copyright>Copyright © Jan Král</Copyright>
@@ -29,10 +29,14 @@
 		<PackageIcon>ASN1Logo.PNG</PackageIcon>
 		<PackageIconUrl />
 		<PackageTags>certificate, asn1, asn, der, pem, cer, decoder, crypto</PackageTags>
-		<PackageReleaseNotes>Added support for more frameworks: net5.0;net45;net461;net47;net48;NETSTANDARD2.1;NETSTANDARD2.0;NETSTANDARD1.6;NETSTANDARD1.5;NETSTANDARD1.4;NETSTANDARD1.3</PackageReleaseNotes>
+		<PackageReleaseNotes>Minor optimizations
+Decoder is now a static class instead of class without public constructor (no API changes)</PackageReleaseNotes>
 		<NeutralLanguage>en</NeutralLanguage>
-		<Description>Aims to make decoding DER encoded data into ASN1 structure human readable very easy</Description>
+		<Description>Aims to make decoding DER encoded data into ASN1 structure, that is easily readable by human, to be very easy</Description>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<ApplicationIcon />
+		<Win32Resource />
+		<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -44,10 +48,14 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Include="..\..\..\..\Desktop\ASN1Logo.PNG">
+		<None Include="ASN1Logo.PNG">
 			<Pack>True</Pack>
 			<PackagePath></PackagePath>
 		</None>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Resource Include="ASN1Logo.PNG" />
 	</ItemGroup>
 
 </Project>
