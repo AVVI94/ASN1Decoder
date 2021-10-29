@@ -282,14 +282,12 @@ namespace Asn1DecoderNet5.Tags
 
             var oid = ConvertBytesToOidString(hexValue);
 
-            var items = OID.OidList;
-
             //get the full OID description from OID list
             for (int i = 0; i < OID.OidList.GetLength(0); i++)
             {
-                if (items[i, 0] == oid)
+                if (OID.OidList[i, 0] == oid)
                 {
-                    oid = $"{items[i, 0]}, {items[i, 1]}{(items[i, 2] == "" ? "" : $", {items[i, 2]}")}{(items[i, 3] == "" ? "" : $", {items[i, 3]}")}";
+                    oid = $"{OID.OidList[i, 0]}, {OID.OidList[i, 1]}{(OID.OidList[i, 2] == "" ? "" : $", {OID.OidList[i, 2]}")}{(OID.OidList[i, 3] == "" ? "" : $", {OID.OidList[i, 3]}")}";
                 }
             }
 

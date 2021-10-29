@@ -13,7 +13,7 @@ namespace Asn1DecoderNet5
     /// </summary>
     public static class Decoder
     {
-        #region privateMethods    
+        #region privateMethods
         private static void ConvertTagsContentsToReadableStringsRecurse(ITag _tag)
         {
             foreach (var child in _tag.Childs)
@@ -27,13 +27,13 @@ namespace Asn1DecoderNet5
 
         private static string TagToStringRecurse(ITag _tag, int lvl, string structureSpacer, int maxContentLineLength)
         {
-            string tmp = "";
+            var sb = new StringBuilder();
             if (_tag.Childs.Count > 0)
             {
-                tmp += $"{MultiplyString(structureSpacer, lvl)}{_tag.TagName}{Environment.NewLine}";
+                sb.Append($"{MultiplyString(structureSpacer, lvl)}{_tag.TagName}{Environment.NewLine}");
                 foreach (var child in _tag.Childs)
                 {
-                    tmp += TagToStringRecurse(child, lvl + 1, structureSpacer, maxContentLineLength);
+                    sb.Append(TagToStringRecurse(child, lvl + 1, structureSpacer, maxContentLineLength));
                 }
             }
             else
@@ -45,7 +45,7 @@ namespace Asn1DecoderNet5
                 #region OID_SpecificProcessing
                 if (_tag.TagNumber == 3 && _lastOid == "2.5.29.15, keyUsage, X.509 extension")
                 {
-                    ConvertKeyUsageFromBitStringToReadableString(_tag, tmp);
+                    ConvertKeyUsageFromBitStringToReadableString(_tag, sb.ToString());
                 }
                 #endregion
                 if (maxContentLineLength > 0 && _tag.ReadableContent.Length > maxContentLineLength)
@@ -57,13 +57,13 @@ namespace Asn1DecoderNet5
 
                     _tag.ReadableContent = _tag.ReadableContent.TrimEnd();
 
-                    tmp += $"{MultiplyString(structureSpacer, lvl)}{_tag.TagName} {_tag.ReadableContent}{Environment.NewLine}";
+                    sb.Append($"{MultiplyString(structureSpacer, lvl)}{_tag.TagName} {_tag.ReadableContent}{Environment.NewLine}");
                 }
                 else
-                    tmp += $"{MultiplyString(structureSpacer, lvl)}{_tag.TagName} {_tag.ReadableContent}{Environment.NewLine}";
+                    sb.Append($"{MultiplyString(structureSpacer, lvl)}{_tag.TagName} {_tag.ReadableContent}{Environment.NewLine}");
             }
 
-            return tmp;
+            return sb.ToString();
         }
 
         private static string[] FormatContentByMaxCharactersPerLine(ITag _tag, int lvl, string structureSpacer, int maxContentLineLength)
@@ -89,12 +89,15 @@ namespace Asn1DecoderNet5
             return firstSplit;
         }
 
-        private static string MultiplyString(string to, int multiplier)
+        private static string MultiplyString(string source, int multiplier)
         {
+            if (multiplier > 3)
+                return new StringBuilder().Insert(0, source, multiplier).ToString();
+
             string tmp = "";
             for (int i = 0; i < multiplier; i++)
             {
-                tmp += to;
+                tmp += source;
             }
             return tmp;
         }
@@ -102,26 +105,32 @@ namespace Asn1DecoderNet5
         private static void ConvertKeyUsageFromBitStringToReadableString(ITag tag, string tmp)
         {
             var hex = BitConverter.ToString(tag.Content);
-            string bin = "";
+            var binSb = new StringBuilder();
             foreach (var item in hex.Split('-'))
             {
-                bin += Convert.ToString(Convert.ToInt64(item, 16), 2);
+                binSb.Append(Convert.ToString(Convert.ToInt64(item, 16), 2));
             }
 
-            string ku = "";
+            string bin = binSb.ToString();
             bin = bin.PadRight(8, '0');
             bin = bin.Substring(bin.Length - 8);
+
+            if (tmp == "00000000")
+            {
+                tag.ReadableContent = "decipherOnly";
+                return;
+            }
+
+            var kuSb = new StringBuilder();
             for (int i = 0; i < bin.Length; i++)
             {
                 string _tmp = bin.Substring(i, 1);
                 if (Enum.IsDefined(typeof(KU), i) && _tmp == "1")
                 {
-                    ku += $"{(KU)i}, ";
+                    kuSb.Append($"{(KU)i}, ");
                 }
-                if (tmp == "00000000")
-                    ku = "decipherOnly";
             }
-            tag.ReadableContent = ku;
+            tag.ReadableContent = kuSb.ToString();
         }
         #endregion
 
@@ -154,7 +163,7 @@ namespace Asn1DecoderNet5
             ConvertTagsContentsToReadableStringsRecurse(tag);
             return TagToStringRecurse(tag, 0, structureSpacer, maxContentLineLength);
         }
-        
+
         #endregion
     }
 }
