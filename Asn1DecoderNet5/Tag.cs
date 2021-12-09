@@ -296,76 +296,58 @@ namespace Asn1DecoderNet5.Tags
 
         private static string ConvertBytesToOidString(List<string> hexValue)
         {
-            var oid = "";
-            var buf = "";
-
-            var firstByte = Convert.ToInt32(hexValue[0], 16);
-            if (firstByte.ToString().Length >= 2)
+            string oid = "";
+            string buff = "";
+            for (int index1 = 0; index1 < hexValue.Count; ++index1)
             {
-                var x = firstByte / 40;
-                var z = firstByte % 40;
-                oid += $"{x}.{z}";
-            }
-            else
-            {
-                oid += $"0.{firstByte}";
-            }
-            for (int i = 1; i < hexValue.Count; i++)
-            {
-                int num = Convert.ToInt32(hexValue[i], 16);
-
-                if (num > 127)
+                string str3 = hexValue[index1];
+                int int32 = Convert.ToInt32(hexValue[index1], 16);
+                if (index1 == 0)
                 {
-                    buf += hexValue[i];
-                    continue;
-                }
-
-                if (num < 128 && buf != "")
-                {
-                    buf += hexValue[i];
-                    var binBuf = Convert.ToString(Convert.ToInt64(buf, 16), 2); //converts the buffer into binary
-                    List<string> list = new List<string>();
-                    List<string> _list = new List<string>();
-
-                    for (int b = binBuf.Length - 8; b > -1; b -= 8) //split buffer by 8
+                    if (int32.ToString().Length >= 2)
                     {
-                        list.Add(binBuf.Substring(b, 8));
+                        int num1 = int32 / 40;
+                        int num2 = int32 % 40;
+                        oid += string.Format("{0}.{1}", (object)num1, (object)num2);
                     }
-
-                    list.Reverse();
-
-                    for (int p = 0; p < list.Count; p++)
+                    else
+                        oid += string.Format("0.{0}", (object)int32);
+                }
+                else if (int32 > (int)sbyte.MaxValue)
+                    buff += hexValue[index1];
+                else if (int32 < 128 && buff != "")
+                {
+                    string binaryBufferString = Convert.ToString(Convert.ToInt64(buff + hexValue[index1], 16), 2);
+                    List<string> binaryByteBuffer = new List<string>();
+                    List<string> longBuffer = new List<string>();
+                    for (int startIndex = binaryBufferString.Length - 8; startIndex > -1; startIndex -= 8)
+                        binaryByteBuffer.Add(binaryBufferString.Substring(startIndex, 8));
+                    binaryByteBuffer.Reverse();
+                    for (int pos = 0; pos < binaryByteBuffer.Count; ++pos)
                     {
-                        if (p != 0) //process first byte
+                        if (pos == 0)
                         {
-                            string itm = list[0];
-                            if (itm.Length < 8) //check if the byte is really 8 bits long, if not, lets make it that long by adding 0s
-                                itm = itm.PadLeft(8, '0');
-                            if (itm[0] == '1') //if 8th bit is 1, set it to 0
-                                itm = "0" + itm.Remove(0, 1);
-                            _list.Add(itm.Remove(0, 1));
+                            string str5 = binaryByteBuffer[0];
+                            if (str5.Length < 8)
+                                str5 = str5.PadLeft(8, '0');
+                            if (str5[0] == '1')
+                                str5 = "0" + str5.Remove(0, 1);
+                            longBuffer.Add(str5.Remove(0, 1));
                         }
                         else
                         {
-                            string itm = list[p];
-                            _list.Add(itm.Remove(0, 1));
+                            string str6 = binaryByteBuffer[pos];
+                            longBuffer.Add(str6.Remove(0, 1));
                         }
                     }
-
-                    string last = "";
-                    foreach (var item in _list)
-                    {
-                        last += item;
-                    }
-
-                    oid += $".{Convert.ToInt32(last, 2)}";
-                    buf = "";
+                    string str7 = "";
+                    foreach (string str8 in longBuffer)
+                        str7 += str8;
+                    oid += string.Format(".{0}", (object)Convert.ToInt32(str7, 2));
+                    buff = "";
                 }
                 else
-                {
-                    oid += $".{num}";
-                }
-
+                    oid += string.Format(".{0}", (object)int32);
             }
 
             return oid;
