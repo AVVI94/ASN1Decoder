@@ -7,7 +7,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Asn1DecoderNet5", "Asn1Deco
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Asn1Decoder.ConsoleDecoder", "Asn1Decoder.ConsoleDecoder\Asn1Decoder.ConsoleDecoder.csproj", "{31FF178C-46F7-4CFF-9A06-B29FB694509A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Asn1DecoderNet5.UnitTests", "Asn1DecoderNet5.UnitTests\Asn1DecoderNet5.UnitTests.csproj", "{4083898E-3600-4DCC-BAC2-C1BAFA5890D0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Asn1DecoderNet5.UnitTests", "Asn1DecoderNet5.UnitTests\Asn1DecoderNet5.UnitTests.csproj", "{4083898E-3600-4DCC-BAC2-C1BAFA5890D0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Asn1DecoderNet5.Benchmark", "Asn1DecoderNet5.Benchmark\Asn1DecoderNet5.Benchmark.csproj", "{D46EB9D3-0D9A-4429-9DED-C4527E1B0EC6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +29,10 @@ Global
 		{4083898E-3600-4DCC-BAC2-C1BAFA5890D0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4083898E-3600-4DCC-BAC2-C1BAFA5890D0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4083898E-3600-4DCC-BAC2-C1BAFA5890D0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D46EB9D3-0D9A-4429-9DED-C4527E1B0EC6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D46EB9D3-0D9A-4429-9DED-C4527E1B0EC6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D46EB9D3-0D9A-4429-9DED-C4527E1B0EC6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D46EB9D3-0D9A-4429-9DED-C4527E1B0EC6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
