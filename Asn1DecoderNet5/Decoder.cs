@@ -132,6 +132,7 @@ namespace Asn1DecoderNet5
             }
             tag.ReadableContent = kuSb.ToString();
         }
+
         #endregion
 
         #region privateFields
@@ -164,6 +165,27 @@ namespace Asn1DecoderNet5
             return TagToStringRecurse(tag, 0, structureSpacer, maxContentLineLength);
         }
 
+        /// <summary>
+        /// Destructurize the tag into list of tags
+        /// </summary>
+        /// <param name="tag">Top level tag</param>
+        /// <returns>List of tag sorted by tag level</returns>
+        public static List<ITag> Desctructurize(ITag tag)
+        {
+            List<ITag> list = new List<ITag>();
+            if (tag.Childs.Count == 0)
+            {
+                list.Add(tag);
+            }
+            else
+            {
+                foreach (var item in tag.Childs)
+                {
+                    list.AddRange(Desctructurize(item));
+                }
+            }
+            return list;
+        }
         #endregion
     }
 }

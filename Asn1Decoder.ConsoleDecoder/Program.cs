@@ -12,15 +12,25 @@ namespace Asn1Decoder.ConsoleDecoder
             Console.WriteLine("Enter a DER file path:");
             var path = Console.ReadLine();
             if (path.StartsWith("\""))
-                path = path.Remove(0,1).Remove(path.Length - 2, 1);
+                path = path.Remove(0, 1).Remove(path.Length - 2, 1);
             var bts = path.EndsWith(".der") ? File.ReadAllBytes(path) : ConvertPemStringTyByteArray(File.ReadAllText(path));
+            Console.WriteLine("Should output be desctructurized? Yes - No [Y/N]");
+            var wantDestructurizedOutput = Console.ReadKey(true).KeyChar.ToString().ToLower() == "y";
             try
             {
                 var tag = (Decoder.Decode(bts));
-                var s =  Decoder.TagToString(tag, " | ", 128);
+                string s;
+                if (!wantDestructurizedOutput)
+                    s = Decoder.TagToString(tag, " | ", 128);
+                else
+                {
+                    var list = Decoder.Desctructurize(tag);
+                    list.ForEach(x => x.ConvertContentToReadableContent());
+                    s = string.Join(Environment.NewLine, list.Select(x=>$"{x.TagName} {x.ReadableContent}"));
+                }
                 Console.WriteLine(s);
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Console.WriteLine(e.Message);
                 Console.WriteLine(e.StackTrace);
