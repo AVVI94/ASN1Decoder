@@ -485,9 +485,9 @@ namespace Asn1DecoderNet5.Tags
 
         string ParseTime()
         {
-            // this only works for short year format, didn't bother by parsing long year format as I have never seen it being used in modern world
             var s = ParseIsoString();
-            s = "20" + s;
+            if (this.TagNumber == 23)
+                s = "20" + s;
             s = $"{s.Substring(0, 4)}/{s.Substring(4, 2)}/{s.Substring(6, 2)} {s.Substring(8, 2)}:{s.Substring(10, 2)}:{s.Substring(12, 2)} UTC";
 
             return s;
