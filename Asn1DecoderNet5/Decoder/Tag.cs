@@ -278,18 +278,11 @@ namespace Asn1DecoderNet5.Tags
 
         string ParseOid()
         {
-            var hexValue = BitConverter.ToString(Content).Split('-').ToList();
+            var oid = Encoding.OidEncoding.GetString(Content);
 
-            var oid = ConvertBytesToOidString(hexValue);
+            var _oid = OID.OidDictionary[oid];
 
-            //get the full OID description from OID list
-            for (int i = 0; i < OID.OidList.GetLength(0); i++)
-            {
-                if (OID.OidList[i, 0] == oid)
-                {
-                    oid = $"{OID.OidList[i, 0]}, {OID.OidList[i, 1]}{(OID.OidList[i, 2] == "" ? "" : $", {OID.OidList[i, 2]}")}{(OID.OidList[i, 3] == "" ? "" : $", {OID.OidList[i, 3]}")}";
-                }
-            }
+            oid = $"{_oid.Value}, {_oid.FriendlyName}, {_oid.Comment}";
 
             return oid;
         }
@@ -298,22 +291,23 @@ namespace Asn1DecoderNet5.Tags
         {
             string oid = "";
             string buff = "";
-            for (int index1 = 0; index1 < hexValue.Count; ++index1)
+
+            int int32 = Convert.ToInt32(hexValue[0], 16);
+            if (int32.ToString().Length >= 2)
+            {
+                int num1 = int32 / 40;
+                int num2 = int32 % 40;
+                oid += string.Format("{0}.{1}", (object)num1, (object)num2);
+            }
+            else
+                oid += string.Format("0.{0}", (object)int32);
+
+            for (int index1 = 1; index1 < hexValue.Count; ++index1)
             {
                 string str3 = hexValue[index1];
-                int int32 = Convert.ToInt32(hexValue[index1], 16);
-                if (index1 == 0)
-                {
-                    if (int32.ToString().Length >= 2)
-                    {
-                        int num1 = int32 / 40;
-                        int num2 = int32 % 40;
-                        oid += string.Format("{0}.{1}", (object)num1, (object)num2);
-                    }
-                    else
-                        oid += string.Format("0.{0}", (object)int32);
-                }
-                else if (int32 > (int)sbyte.MaxValue)
+                int32 = Convert.ToInt32(hexValue[index1], 16);
+
+                if (int32 > (int)sbyte.MaxValue)
                     buff += hexValue[index1];
                 else if (int32 < 128 && buff != "")
                 {
@@ -323,23 +317,20 @@ namespace Asn1DecoderNet5.Tags
                     for (int startIndex = binaryBufferString.Length - 8; startIndex > -1; startIndex -= 8)
                         binaryByteBuffer.Add(binaryBufferString.Substring(startIndex, 8));
                     binaryByteBuffer.Reverse();
-                    for (int pos = 0; pos < binaryByteBuffer.Count; ++pos)
+
+                    string str5 = binaryByteBuffer[0];
+                    if (str5.Length < 8)
+                        str5 = str5.PadLeft(8, '0');
+                    if (str5[0] == '1')
+                        str5 = "0" + str5.Remove(0, 1);
+                    longBuffer.Add(str5.Remove(0, 1));
+
+                    for (int pos = 1; pos < binaryByteBuffer.Count; ++pos)
                     {
-                        if (pos == 0)
-                        {
-                            string str5 = binaryByteBuffer[0];
-                            if (str5.Length < 8)
-                                str5 = str5.PadLeft(8, '0');
-                            if (str5[0] == '1')
-                                str5 = "0" + str5.Remove(0, 1);
-                            longBuffer.Add(str5.Remove(0, 1));
-                        }
-                        else
-                        {
-                            string str6 = binaryByteBuffer[pos];
-                            longBuffer.Add(str6.Remove(0, 1));
-                        }
+                        string str6 = binaryByteBuffer[pos];
+                        longBuffer.Add(str6.Remove(0, 1));
                     }
+
                     string str7 = "";
                     foreach (string str8 in longBuffer)
                         str7 += str8;

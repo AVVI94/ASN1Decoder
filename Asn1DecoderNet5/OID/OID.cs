@@ -6,8 +6,88 @@ using System.Threading.Tasks;
 
 namespace Asn1DecoderNet5
 {
-    public static class OID
+    /// <summary>
+    /// Class representing Object Identifier tag content
+    /// </summary>
+    public class OID
     {
+        static OID()
+        {
+            OidDictionary = new Dictionary<string, OID>(OidList.Length);
+            for (int i = 0; i < OidList.GetLength(0); i++)
+            {
+                OidDictionary.Add(OidList[i, 0], new OID(OidList[i, 0], OidList[i, 1], OidList[i, 2] + OidList[i, 3]));
+            }
+        }
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="oidValue">OID number value (2.5.29.29 etc...)</param>
+        /// <param name="friendlyName">Friendly name of the OID (certificateIssuer etc...)</param>
+        /// <param name="comment">Comment (X.509 extension etc...)</param>
+        public OID(string oidValue, string friendlyName, string comment)
+        {
+            Value = oidValue;
+            FriendlyName = friendlyName;
+            Comment = comment;
+        }
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="value">OID  value encoded in bytes</param>
+        /// <param name="friendlyName">Friendly name of the OID (certificateIssuer etc...)</param>
+        /// <param name="comment">Comment (X.509 extension etc...)</param>
+        public OID(byte[] value, string friendlyName, string comment)
+        {
+            if (value is null || value.Length == 0)
+            {
+                throw new ArgumentNullException(nameof(value));
+            }
+
+            if (string.IsNullOrEmpty(friendlyName))
+            {
+                throw new ArgumentException($"'{nameof(friendlyName)}' cannot be null or empty.", nameof(friendlyName));
+            }
+
+            if (string.IsNullOrEmpty(comment))
+            {
+                throw new ArgumentException($"'{nameof(comment)}' cannot be null or empty.", nameof(comment));
+            }
+
+            Value = Encoding.OidEncoding.GetString(value);
+            FriendlyName = friendlyName;
+            Comment = comment;
+        }
+        
+        /// <summary>
+        /// Dictionary of existing common OID objects, the key is OID string for example "2.5.29.29"
+        /// </summary>
+        public static Dictionary<string, OID> OidDictionary { get; private set; }
+        /// <summary>
+        /// OID value, for example "2.5.29.29"
+        /// </summary>
+        public string Value { get; private set; }
+        /// <summary>
+        /// OID value friendly name, for example "certificateIssuer"
+        /// </summary>
+        public string FriendlyName { get; private set; }
+        /// <summary>
+        /// OID comment, for example X.509 extension
+        /// </summary>
+        public string Comment { get; private set; }
+
+        private byte[] _byteValue;
+        /// <summary>
+        /// <see cref="Value"/> encoded as byte[]
+        /// </summary>
+        public byte[] ByteValue
+        {
+            get { return _byteValue ?? (_byteValue = Encoding.OidEncoding.GetBytes(Value)); }
+        }
+
+        [Obsolete("This field is obsolete for external use, kept only for internal usage. Use OID.OidDictionary instead.")]
         public static readonly string[,] OidList =
              {
 {"0.2.262.1.10","Telesec","Deutsche Telekom",""},
