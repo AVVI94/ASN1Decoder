@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net6.0;
+		<TargetFrameworks>net7.0;net6.0;
 			net5.0;
 			net45;
 			net461;
@@ -18,8 +18,8 @@
 		<Company />
 		<ApplicationIcon />
 		<Win32Resource />
-		<Version>1.5</Version>
-		<AssemblyVersion>1.5.0.0</AssemblyVersion>
+		<Version>1.5.1</Version>
+		<AssemblyVersion>1.5.1.0</AssemblyVersion>
 	</PropertyGroup>
 	
 	<PropertyGroup Condition="'$(Configuration)' == 'Release'">

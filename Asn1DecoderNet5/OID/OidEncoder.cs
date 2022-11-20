@@ -61,7 +61,7 @@ namespace Asn1DecoderNet5.Encoding
                     var b = new byte[bytes.Count];
                     b[0] = (byte)(x & 0x7F);
                     for (int y = 1; y < bytes.Count; y++)
-                        b[y] = (byte)(((x >> 7 * y) & 0x7F) | 0x80);
+                        b[y] = (byte)(((x >> 7 * y)) | 0x80);
 
                     res.AddRange(b.Reverse());
                     continue;
