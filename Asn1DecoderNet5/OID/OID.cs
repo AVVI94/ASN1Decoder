@@ -60,7 +60,7 @@ namespace Asn1DecoderNet5
             FriendlyName = friendlyName;
             Comment = comment;
         }
-        
+
         /// <summary>
         /// Dictionary of existing common OID objects, the key is OID string for example "2.5.29.29"
         /// </summary>
@@ -1858,6 +1858,7 @@ namespace Asn1DecoderNet5
 {"2.5.4.75","xMLPrivilegeInfo","X.520 DN component",""},
 {"2.5.4.76","xmlPrivPolicy","X.520 DN component",""},
 {"2.5.4.82","permission","X.520 DN component",""},
+{"2.5.4.97","organizationIdentifier","X.520 DN component",""},
 {"2.5.6.0","top","X.520 objectClass",""},
 {"2.5.6.1","alias","X.520 objectClass",""},
 {"2.5.6.2","country","X.520 objectClass",""},

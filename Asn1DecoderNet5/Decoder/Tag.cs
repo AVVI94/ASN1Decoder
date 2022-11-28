@@ -280,9 +280,9 @@ namespace Asn1DecoderNet5.Tags
         {
             var oid = Encoding.OidEncoding.GetString(Content);
 
-            var _oid = OID.OidDictionary[oid];
-
-            oid = $"{_oid.Value}, {_oid.FriendlyName}, {_oid.Comment}";
+            var retVal = OID.OidDictionary.TryGetValue(oid, out var _oid);
+            if (retVal)
+                oid = $"{_oid.Value}, {_oid.FriendlyName}, {_oid.Comment}";
 
             return oid;
         }
