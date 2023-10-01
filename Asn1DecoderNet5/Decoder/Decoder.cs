@@ -25,7 +25,7 @@ namespace Asn1DecoderNet5
             }
         }
 
-        private static string TagToStringRecurse(ITag _tag, int lvl, string structureSpacer, int maxContentLineLength, string lastOid)
+        private static string TagToStringRecurse(ITag _tag, int lvl, string structureSpacer, int maxContentLineLength, ref string lastOid)
         {
             var sb = new StringBuilder();
             if (_tag.Childs.Count > 0)
@@ -33,7 +33,7 @@ namespace Asn1DecoderNet5
                 sb.Append($"{MultiplyString(structureSpacer, lvl)}{_tag.TagName}{Environment.NewLine}");
                 foreach (var child in _tag.Childs)
                 {
-                    sb.Append(TagToStringRecurse(child, lvl + 1, structureSpacer, maxContentLineLength, lastOid));
+                    sb.Append(TagToStringRecurse(child, lvl + 1, structureSpacer, maxContentLineLength, ref lastOid));
                 }
             }
             else
@@ -156,7 +156,8 @@ namespace Asn1DecoderNet5
         public static string TagToString(ITag tag, string structureSpacer, int maxContentLineLength)
         {
             ConvertTagsContentsToReadableStringsRecurse(tag);
-            return TagToStringRecurse(tag, 0, structureSpacer, maxContentLineLength, null);
+            string lastOid = null;
+            return TagToStringRecurse(tag, 0, structureSpacer, maxContentLineLength, ref lastOid);
         }
 
         /// <summary>
