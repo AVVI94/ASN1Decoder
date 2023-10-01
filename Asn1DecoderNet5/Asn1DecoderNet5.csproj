@@ -19,6 +19,7 @@
 		<ApplicationIcon />
 		<Win32Resource />
 		<Version>1.5.3</Version>
+		<LangVersion>latest</LangVersion>
 	</PropertyGroup>
 	
 	<PropertyGroup Condition="'$(Configuration)' == 'Release'">

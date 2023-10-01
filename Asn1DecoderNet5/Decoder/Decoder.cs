@@ -25,7 +25,7 @@ namespace Asn1DecoderNet5
             }
         }
 
-        private static string TagToStringRecurse(ITag _tag, int lvl, string structureSpacer, int maxContentLineLength)
+        private static string TagToStringRecurse(ITag _tag, int lvl, string structureSpacer, int maxContentLineLength, ref string lastOid)
         {
             var sb = new StringBuilder();
             if (_tag.Childs.Count > 0)
@@ -33,17 +33,17 @@ namespace Asn1DecoderNet5
                 sb.Append($"{MultiplyString(structureSpacer, lvl)}{_tag.TagName}{Environment.NewLine}");
                 foreach (var child in _tag.Childs)
                 {
-                    sb.Append(TagToStringRecurse(child, lvl + 1, structureSpacer, maxContentLineLength));
+                    sb.Append(TagToStringRecurse(child, lvl + 1, structureSpacer, maxContentLineLength, ref lastOid));
                 }
             }
             else
             {
                 if (_tag.TagNumber == 6)
                 {
-                    _lastOid = _tag.ReadableContent;
+                    lastOid = _tag.ReadableContent;
                 }
                 #region OID_SpecificProcessing
-                if (_tag.TagNumber == 3 && _lastOid == "2.5.29.15, keyUsage, X.509 extension")
+                if (_tag.TagNumber == 3 && lastOid == "2.5.29.15, keyUsage, X.509 extension")
                 {
                     ConvertKeyUsageFromBitStringToReadableString(_tag, sb.ToString());
                 }
@@ -135,12 +135,6 @@ namespace Asn1DecoderNet5
 
         #endregion
 
-        #region privateFields
-
-        static string _lastOid;
-
-        #endregion
-
         #region publicAPI
         /// <summary>
         /// Decode the DER encoded data sequence
@@ -162,7 +156,8 @@ namespace Asn1DecoderNet5
         public static string TagToString(ITag tag, string structureSpacer, int maxContentLineLength)
         {
             ConvertTagsContentsToReadableStringsRecurse(tag);
-            return TagToStringRecurse(tag, 0, structureSpacer, maxContentLineLength);
+            string lastOid = null;
+            return TagToStringRecurse(tag, 0, structureSpacer, maxContentLineLength, ref lastOid);
         }
 
         /// <summary>

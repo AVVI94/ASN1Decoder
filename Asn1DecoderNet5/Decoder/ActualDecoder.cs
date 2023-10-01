@@ -20,7 +20,7 @@ namespace Asn1DecoderNet5
 
             if (tag.IsConstructed)
             {
-                GetChilds(data, tag, ref len, start);
+                GetChilds(data, ref tag, ref len, start);
             }
             else if (tag.IsUniversal && (tag.TagNumber == 0x03 || tag.TagNumber == 0x04))
             {
@@ -29,7 +29,7 @@ namespace Asn1DecoderNet5
                     if (tag.TagNumber == 0x03)
                         if (data[++i] != 0)
                             throw new Exception("BitString with unused bits cannot encapsulate");
-                    GetChilds(data, tag, ref len, start);
+                    GetChilds(data, ref tag, ref len, start);
                     foreach (var ch in tag.Childs)
                     {
                         if (ch.IsEoc)
@@ -46,17 +46,13 @@ namespace Asn1DecoderNet5
             {
                 if (len == null)
                     throw new Exception($"Cannot skip over an invalid tag with indefinite length at offset {start}");
-#if NET5_0_OR_GREATER
-                tag.Content = data[start..(len.Value + start)];
-#else
                 Array.Copy(data, start, tag.Content = new byte[len.Value], 0, len.Value);
-#endif
                 i = start + Math.Abs(len.Value);
             }
             return tag;
         }
 
-        void GetChilds(byte[] data, Tag tag, ref int? len, int start)
+        void GetChilds(byte[] data, ref Tag tag, ref int? len, int start)
         {
             if (len != null)
             {
@@ -75,7 +71,7 @@ namespace Asn1DecoderNet5
             {
                 try
                 {
-                    for (; ; )
+                    while (true)
                     {
                         var child = Decode(data);
                         if (child.IsEoc)
