@@ -10,8 +10,10 @@ namespace Asn1DecoderNet5
 {
     internal class ActualDecoder
     {
+#pragma warning disable IDE1006 // Naming styles
         //"global" stream position
         int i = 0;
+#pragma warning restore IDE1006 // Naming styles
         public ITag Decode(byte[] data)
         {
             var tag = new Tag(data, ref i);
@@ -22,11 +24,11 @@ namespace Asn1DecoderNet5
             {
                 GetChilds(data, ref tag, ref len, start);
             }
-            else if (tag.IsUniversal && (tag.TagNumber == 0x03 || tag.TagNumber == 0x04))
+            else if (tag.IsUniversal && (tag.TagNumber == (int)Tags.Tags.BIT_STRING || tag.TagNumber == (int)Tags.Tags.OCTET_STRING))
             {
                 try
                 {
-                    if (tag.TagNumber == 0x03)
+                    if (tag.TagNumber == (int)Tags.Tags.BIT_STRING)
                         if (data[++i] != 0)
                             throw new Exception("BitString with unused bits cannot encapsulate");
                     GetChilds(data, ref tag, ref len, start);
@@ -41,13 +43,21 @@ namespace Asn1DecoderNet5
                     tag.Childs.Clear();
                 }
             }
-
             if (tag.Childs.Count == 0)
             {
                 if (len == null)
                     throw new Exception($"Cannot skip over an invalid tag with indefinite length at offset {start}");
                 Array.Copy(data, start, tag.Content = new byte[len.Value], 0, len.Value);
                 i = start + Math.Abs(len.Value);
+            }
+            //check for KeyUsage OID in first child tag
+            else if (tag.IsKeyUsageSequence())
+            {
+                //parse out from child tags if the KU is marked as critical and get the BIT_STRING KU tag itself
+                var crit = tag.IsKeyUsageCritical();
+                var bs = tag.GetKeyUsageBitStringTag();
+                //change the BIT_STRING tag instance from generic Tag to KeyUsageTag
+                tag.Childs[2].Childs[0] = new KeyUsageTag(in bs, crit);
             }
             return tag;
         }

@@ -126,7 +126,7 @@ namespace Asn1DecoderNet5.Tags
             {
                 0x01 => ParseBoolean(),
                 0x02 => ParseInteger(),
-                0x03 => ParseBitString(),
+                0x03 => ParseBitString(Content),
                 0x04 => ParseOctetString(),
                 0x05 => "",
                 0x06 => ParseOid(),
@@ -242,18 +242,18 @@ namespace Asn1DecoderNet5.Tags
             return BigInteger.Parse(sb.ToString(), System.Globalization.NumberStyles.HexNumber).ToString();
         }
 
-        readonly string ParseBitString()
+        internal static string ParseBitString(byte[] data)
         {
-            byte unusedBits = Content[0];
+            byte unusedBits = data[0];
             if (unusedBits > 7)
                 throw new Exception($"Invalid BitString with unused bits {unusedBits}");
 
             StringBuilder sb = new StringBuilder();
 
-            for (int i = 1; i < Content.Length; ++i)
+            for (int i = 1; i < data.Length; ++i)
             {
-                byte b = Content[i];
-                var skip = (i == (Content.Length - 1)) ? unusedBits : 0;
+                byte b = data[i];
+                var skip = (i == (data.Length - 1)) ? unusedBits : 0;
 
                 for (int j = 7; j >= skip; --j)
                 {
@@ -293,7 +293,11 @@ namespace Asn1DecoderNet5.Tags
             var s = ParseIsoString();
             if (this.TagNumber == 23)
                 s = "20" + s;
+#pragma warning disable IDE0079 // Remove unnecessary suppression
+#pragma warning disable IDE0057 // Use range operator
             s = $"{s.Substring(0, 4)}/{s.Substring(4, 2)}/{s.Substring(6, 2)} {s.Substring(8, 2)}:{s.Substring(10, 2)}:{s.Substring(12, 2)} UTC";
+#pragma warning restore IDE0057 // Use range operator
+#pragma warning restore IDE0079 // Remove unnecessary suppression
 
             return s;
         }

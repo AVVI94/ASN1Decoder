@@ -32,17 +32,13 @@ namespace Asn1DecoderNet5.Encoding
             }
             //https://docs.microsoft.com/en-us/windows/win32/seccertenroll/about-object-identifier?redirectedfrom=MSDN
             var split = oid.Split('.');
-            int int1;
-
-            switch (char.Parse(split[0]))
+            var int1 = char.Parse(split[0]) switch
             {
-                case '0': int1 = 0; break;
-                case '1': int1 = 1; break;
-                case '2': int1 = 2; break;
-                default:
-                   throw new ArgumentException("Invalid OID value at oid.Split('.') index 0");
-            }
-
+                '0' => 0,
+                '1' => 1,
+                '2' => 2,
+                _ => throw new ArgumentException("Invalid OID value at oid.Split('.') index 0"),
+            };
             int int2 = int.Parse(split[1]);
 
             List<byte> res = new List<byte>
@@ -89,7 +85,7 @@ namespace Asn1DecoderNet5.Encoding
 
             for (int index1 = 1; index1 < hexValue.Count; ++index1)
             {
-                string str3 = hexValue[index1];
+                //string str3 = hexValue[index1];
                 int32 = Convert.ToInt32(hexValue[index1], 16);
 
                 if (int32 > (int)sbyte.MaxValue)

@@ -11,13 +11,26 @@ namespace Asn1DecoderNet5
     /// </summary>
     public class OID
     {
+        public const string KEY_USAGE = "2.5.29.15";
+        public const string COMMON_NAME = "2.5.4.3";
+        public const string SURNAME = "2.5.4.4";
+        public const string GIVEN_NAME = "2.5.4.42";
+        public const string SERIAL_NUMBER = "2.5.4.5";
+        public const string COUNTRY_NAME = "2.5.4.6";
+        public const string LOCALITY = "2.5.4.7";
+        public const string STATE_OR_PROVINCE_NAME = "2.5.4.8";
+        public const string ORGANIZATION_NAME = "2.5.4.10";
+        public const string ORGANIZATION_UNIT = "2.5.4.11";
+        public const string TITLE = "2.5.4.12";
         static OID()
         {
+#pragma warning disable CS0618 // Type or member is obsolete
             OidDictionary = new Dictionary<string, OID>(OidList.Length);
             for (int i = 0; i < OidList.GetLength(0); i++)
             {
                 OidDictionary.Add(OidList[i, 0], new OID(OidList[i, 0], OidList[i, 1], OidList[i, 2] + OidList[i, 3]));
             }
+#pragma warning restore CS0618 // Type or member is obsolete
         }
 
         /// <summary>
@@ -44,16 +57,6 @@ namespace Asn1DecoderNet5
             if (value is null || value.Length == 0)
             {
                 throw new ArgumentNullException(nameof(value));
-            }
-
-            if (string.IsNullOrEmpty(friendlyName))
-            {
-                throw new ArgumentException($"'{nameof(friendlyName)}' cannot be null or empty.", nameof(friendlyName));
-            }
-
-            if (string.IsNullOrEmpty(comment))
-            {
-                throw new ArgumentException($"'{nameof(comment)}' cannot be null or empty.", nameof(comment));
             }
 
             Value = Encoding.OidEncoding.GetString(value);
@@ -84,7 +87,7 @@ namespace Asn1DecoderNet5
         /// </summary>
         public byte[] ByteValue
         {
-            get { return _byteValue ?? (_byteValue = Encoding.OidEncoding.GetBytes(Value)); }
+            get { return _byteValue ??= Encoding.OidEncoding.GetBytes(Value); }
         }
 
         [Obsolete("This field is obsolete for external use, kept only for internal usage. Use OID.OidDictionary instead.")]
@@ -1769,21 +1772,21 @@ namespace Asn1DecoderNet5
 {"2.5.4.0","objectClass","X.520 DN component",""},
 {"2.5.4.1","aliasedEntryName","X.520 DN component",""},
 {"2.5.4.2","knowledgeInformation","X.520 DN component",""},
-{"2.5.4.3","commonName","X.520 DN component",""},
-{"2.5.4.4","surname","X.520 DN component",""},
-{"2.5.4.5","serialNumber","X.520 DN component",""},
-{"2.5.4.6","countryName","X.520 DN component",""},
-{"2.5.4.7","localityName","X.520 DN component",""},
+{COMMON_NAME,"commonName","X.520 DN component",""},
+{SURNAME,"surname","X.520 DN component",""},
+{SERIAL_NUMBER,"serialNumber","X.520 DN component",""},
+{COUNTRY_NAME,"countryName","X.520 DN component",""},
+{LOCALITY,"localityName","X.520 DN component",""},
 {"2.5.4.7.1","collectiveLocalityName","X.520 DN component",""},
-{"2.5.4.8","stateOrProvinceName","X.520 DN component",""},
+{STATE_OR_PROVINCE_NAME,"stateOrProvinceName","X.520 DN component",""},
 {"2.5.4.8.1","collectiveStateOrProvinceName","X.520 DN component",""},
 {"2.5.4.9","streetAddress","X.520 DN component",""},
 {"2.5.4.9.1","collectiveStreetAddress","X.520 DN component",""},
-{"2.5.4.10","organizationName","X.520 DN component",""},
+{ORGANIZATION_NAME,"organizationName","X.520 DN component",""},
 {"2.5.4.10.1","collectiveOrganizationName","X.520 DN component",""},
-{"2.5.4.11","organizationalUnitName","X.520 DN component",""},
+{ORGANIZATION_UNIT,"organizationalUnitName","X.520 DN component",""},
 {"2.5.4.11.1","collectiveOrganizationalUnitName","X.520 DN component",""},
-{"2.5.4.12","title","X.520 DN component",""},
+{TITLE,"title","X.520 DN component",""},
 {"2.5.4.13","description","X.520 DN component",""},
 {"2.5.4.14","searchGuide","X.520 DN component",""},
 {"2.5.4.15","businessCategory","X.520 DN component",""},
@@ -1894,7 +1897,7 @@ namespace Asn1DecoderNet5
 {"2.5.29.12","policyConstraints","X.509 extension.  Deprecated"," use 2 5 29 36 instead"},
 {"2.5.29.13","basicConstraints","X.509 extension.  Deprecated"," use 2 5 29 19 instead"},
 {"2.5.29.14","subjectKeyIdentifier","X.509 extension",""},
-{"2.5.29.15","keyUsage","X.509 extension",""},
+{KEY_USAGE,"keyUsage","X.509 extension",""},
 {"2.5.29.16","privateKeyUsagePeriod","X.509 extension",""},
 {"2.5.29.17","subjectAltName","X.509 extension",""},
 {"2.5.29.18","issuerAltName","X.509 extension",""},

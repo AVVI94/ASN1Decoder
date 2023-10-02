@@ -110,10 +110,14 @@ namespace Asn1DecoderNet5
             {
                 binSb.Append(Convert.ToString(Convert.ToInt64(item, 16), 2));
             }
-
+            //TODO: maybe use Span?
             string bin = binSb.ToString();
             bin = bin.PadRight(8, '0');
+#pragma warning disable IDE0079 // Remove unnecessary suppression
+#pragma warning disable IDE0057 // Use range operator
             bin = bin.Substring(bin.Length - 8);
+#pragma warning restore IDE0057 // Use range operator
+#pragma warning restore IDE0079 // Remove unnecessary suppression
 
             if (tmp == "00000000")
             {
