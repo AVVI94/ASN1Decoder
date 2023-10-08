@@ -84,7 +84,7 @@ namespace Asn1DecoderNet5.Tags
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public bool IsConstructed { get; }
+        public bool IsConstructed { get; internal set; }
         /// <summary>
         /// <inheritdoc/>
         /// </summary>

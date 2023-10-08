@@ -59,6 +59,7 @@ namespace Asn1DecoderNet5
                 //change the BIT_STRING tag instance from generic Tag to KeyUsageTag
                 tag.Childs[2].Childs[0] = new KeyUsageTag(in bs, crit);
             }
+            tag.IsConstructed = tag.Childs.Count > 0;
             return tag;
         }
 

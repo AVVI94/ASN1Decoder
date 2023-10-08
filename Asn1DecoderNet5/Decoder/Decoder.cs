@@ -140,6 +140,11 @@ namespace Asn1DecoderNet5
         #endregion
 
         #region publicAPI
+        public static byte[] Encode(ITag data)
+        {
+            return ActualEncoder.Encode(data).ToArray();
+        }
+
         /// <summary>
         /// Decode the DER encoded data sequence
         /// </summary>

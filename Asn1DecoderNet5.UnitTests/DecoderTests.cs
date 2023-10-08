@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,6 +10,14 @@ namespace Asn1DecoderNet5.UnitTests
 {
     public class DecoderTests
     {
+        [Fact]
+        public void Should_Encode()
+        {
+            var tag = Decoder.Decode(Sources.NormalCertificateWithEmailInSan);
+            var enc = Decoder.Encode(tag);
+            Assert.Equal(Sources.NormalCertificateWithEmailInSan, enc);
+        }
+
         [Fact]
         public void Should_GetEku_GetsEkuFromCert()
         {
