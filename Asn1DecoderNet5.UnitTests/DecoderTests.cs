@@ -10,6 +10,33 @@ namespace Asn1DecoderNet5.UnitTests
     public class DecoderTests
     {
         [Fact]
+        public void Should_GetSan_GetsSanFromCertRequest()
+        {
+            var tag = Decoder.Decode(Sources.CertRequestWithSan);
+            var ok = tag.TryGetSubjectAlternativeName(out var san);
+            Assert.True(ok);
+            Assert.NotEmpty(san);
+        }
+
+        [Fact]
+        public void Should_GetSan_GetsSanWithMailFromCert()
+        {
+            var tag = Decoder.Decode(Sources.NormalCertificateWithEmailInSan);
+            var ok = tag.TryGetSubjectAlternativeName(out var san);
+            Assert.True(ok);
+            Assert.NotEmpty(san);
+        }
+
+        [Fact]
+        public void Should_GetSan_GetsSanFromCert()
+        {
+            var tag = Decoder.Decode(Sources.NormalCertificate);
+            var ok = tag.TryGetSubjectAlternativeName(out var san);
+            Assert.True(ok);
+            Assert.NotEmpty(san);
+        }
+
+        [Fact]
         public void GetCommonName_Issuer()
         {
             var tag = Decoder.Decode(Sources.NormalCertificate);
@@ -17,7 +44,7 @@ namespace Asn1DecoderNet5.UnitTests
             Assert.True(ok);
             Assert.Equal("I.CA Test Qualified 2 CA/ECC 06/2019", res[0]);
         }
-        
+
         [Fact]
         public void Should_IsCertificate_ReturnsTrue()
         {
@@ -49,7 +76,7 @@ namespace Asn1DecoderNet5.UnitTests
             Assert.True(ku);
             Assert.False(keyUsage.KeyUsages == null);
         }
-        
+
         [Fact]
         public void ShouldNotGetKeyUsage()
         {

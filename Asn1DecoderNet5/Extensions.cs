@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Asn1DecoderNet5.Interfaces;
 using Asn1DecoderNet5.Tags;
+using Asn1DecoderNet5.Tags.SAN;
 
 namespace Asn1DecoderNet5
 {
@@ -12,7 +13,10 @@ namespace Asn1DecoderNet5
         static readonly byte[] _version2Sequence = new byte[] { 0x02 };
         static readonly byte[] _booleanTrueSequence = new byte[] { 0xFF };
         static readonly byte[] _keyUsageOidSequence = new byte[] { 0x55, 0x1D, 0x0f };
-
+        static readonly byte[] _sanOidSequence = new byte[] { 0x55, 0x1D, 0x11 };
+        static readonly byte[] _icaUserIdSequence = Encoding.OidEncoding.GetBytes(OID.ICA_USER_ID);
+        static readonly byte[] _icaIkMpsvSequence = Encoding.OidEncoding.GetBytes(OID.ICA_IK_MPSV);
+        static readonly byte[] _extensionRequestSequence = Encoding.OidEncoding.GetBytes(OID.EXTENSION_REQUEST);
         public static string ToOidString(this SubjectItemKind subjectItem)
         {
             return subjectItem switch
@@ -369,6 +373,157 @@ namespace Asn1DecoderNet5
             {
                 return false;
             }
+        }
+
+        /// <summary>
+        /// Tries to retrieve the subject alternative name (SAN) and parse the known (and supported) tags from certificate or certificate request.
+        /// </summary>
+        /// <remarks>
+        /// To get the actual parsed data the object from result list must be casted accordingly to its kind. <br/><br/>
+        /// <list type="table">
+        /// <listheader>
+        /// <term><see cref="SanItemKind"/></term>
+        /// <description><see cref="Type"/> mapping</description>
+        /// </listheader>
+        /// <item>
+        /// <term><see cref="SanItemKind.OtherName"/></term>
+        /// <description><see cref="OtherName"/></description>
+        /// </item>
+        /// <item>
+        /// <term><see cref="SanItemKind.Rfc822Name"/></term>
+        /// <description><see cref="Rfc822Name"/></description>
+        /// </item>
+        /// <item>
+        /// <term><see cref="SanItemKind.DNSName"/></term>
+        /// <description><see cref="DnsName"/></description>
+        /// </item>
+        /// <item>
+        /// <term><see cref="SanItemKind.X400Address"/></term>
+        /// <description><see cref="X400Address"/></description>
+        /// </item>
+        /// <item>
+        /// <term><see cref="SanItemKind.DirectoryName"/></term>
+        /// <description><see cref="DirectoryName"/></description>
+        /// </item>
+        /// <item>
+        /// <term><see cref="SanItemKind.EdiPartyName"/></term>
+        /// <description><see cref="EidPartyName"/></description>
+        /// </item>
+        /// <item>
+        /// <term><see cref="SanItemKind.UniformResourceIdentifier"/></term>
+        /// <description><see cref="UniformResourceIdentifier"/></description>
+        /// </item>
+        /// <item>
+        /// <term><see cref="SanItemKind.IPAddress"/></term>
+        /// <description><see cref="IPAddress"/></description>
+        /// </item>
+        /// <item>
+        /// <term><see cref="SanItemKind.RegisteredID"/></term>
+        /// <description><see cref="RegisteredID"/></description>
+        /// </item>
+        /// </list>
+        /// </remarks>
+        /// <param name="topLevelTag">Top level source tag</param>
+        /// <param name="san">Result</param>
+        /// <returns></returns>
+        public static bool TryGetSubjectAlternativeName(this ITag topLevelTag, out List<ISanItem> san)
+        {
+            san = new();
+            try
+            {
+                if (IsCertificate(topLevelTag))
+                {
+                    if (!HasCertExtensions(topLevelTag))
+                        return false;
+                    foreach (var item in topLevelTag.Childs[0].Childs[topLevelTag.Childs[0].Childs.Count - 1].Childs[0].Childs)
+                    {
+                        if (!item.Childs[0].Content.SequenceEqual(_sanOidSequence))
+                            continue;
+                        ParseSan(san, item);
+                        break;
+                    }
+                }
+                else if (IsCertificateRequest(topLevelTag))
+                {
+                    if (!HasRequestedExtensions(topLevelTag))
+                        return false;
+                    foreach (var item in topLevelTag.Childs[0].Childs[topLevelTag.Childs[0].Childs.Count - 1].Childs[0].Childs[1].Childs[0].Childs)
+                    {
+                        if (!item.Childs[0].Content.SequenceEqual(_sanOidSequence))
+                            continue;
+                        ParseSan(san, item);
+                        break;
+                    }
+                }
+                return true;
+
+            }
+            catch
+            {
+                return false;
+            }
+
+            static void ParseSan(List<ISanItem> san, ITag item)
+            {
+                foreach (var sanItem in item.Childs[1].Childs[0].Childs)
+                {
+                    switch (sanItem.TagName)
+                    {
+                        case "[0]":
+                            if (sanItem.Childs[0].Content.SequenceEqual(_icaUserIdSequence))
+                                san.Add(new IcaUserId(sanItem.Childs[1]));
+                            else if (sanItem.Childs[0].Content.SequenceEqual(_icaIkMpsvSequence))
+                                san.Add(new IcaIkMpsv(sanItem.Childs[1]));
+                            else
+                                san.Add(new OtherName(OID.GetOrCreate(sanItem.Childs[0].Content), sanItem.Childs[1].Childs[0]));
+                            break;
+                        case "[1]":
+                            sanItem.ConvertContentToReadableContent();
+                            san.Add(new Rfc822Name(sanItem.ReadableContent));
+                            break;
+                        case "[2]":
+                            sanItem.ConvertContentToReadableContent();
+                            san.Add(new DnsName(sanItem.ReadableContent));
+                            break;
+                        case "[3]":
+                            sanItem.Childs[0].ConvertContentToReadableContent();
+                            san.Add(new X400Address(sanItem.Childs[0]));
+                            break;
+                        case "[4]":
+                            san.Add(new DirectoryName(sanItem.Childs[0]));
+                            break;
+                        case "[5]":
+                            san.Add(new EidPartyName(sanItem.Childs[0]));
+                            break;
+                        case "[6]":
+                            sanItem.ConvertContentToReadableContent();
+                            san.Add(new UniformResourceIdentifier(sanItem.ReadableContent));
+                            break;
+                        case "[7]":
+                            sanItem.ConvertContentToReadableContent();
+                            san.Add(new IPAddress(sanItem.ReadableContent));
+                            break;
+                        case "[8]":
+                            sanItem.Childs[0].ConvertContentToReadableContent();
+                            san.Add(new RegisteredID(OID.GetOrCreate(sanItem.Childs[0].Content)));
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            }
+        }
+
+        private static bool HasCertExtensions(ITag topLevelCertificateTag)
+        {
+            return topLevelCertificateTag.Childs[0].Childs[topLevelCertificateTag.Childs[0].Childs.Count - 1].TagName == "[3]";
+        }
+
+        private static bool HasRequestedExtensions(ITag topLevelCertRequestTag)
+        {
+            return topLevelCertRequestTag.Childs[0].Childs[topLevelCertRequestTag.Childs[0].Childs.Count - 1].TagName == "[0]"
+                    && topLevelCertRequestTag.Childs[0].Childs[topLevelCertRequestTag.Childs[0].Childs.Count - 1]
+                                  .Childs[0].Childs[0].Content.SequenceEqual(_extensionRequestSequence);
         }
 
         #region Helpers

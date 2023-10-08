@@ -9,10 +9,6 @@
 			net48;
 			NETSTANDARD2.1;
 			NETSTANDARD2.0;
-			NETSTANDARD1.6;
-			NETSTANDARD1.5;
-			NETSTANDARD1.4;
-			NETSTANDARD1.3
 		</TargetFrameworks>
 		<Product>ASN1DecoderNet5</Product>
 		<Company />
