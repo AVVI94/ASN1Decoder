@@ -15,7 +15,8 @@
 		<ApplicationIcon />
 		<Win32Resource />
 		<Version>1.5.3</Version>
-		<LangVersion>latest</LangVersion>		
+		<LangVersion>latest</LangVersion>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>		
 	</PropertyGroup>
 	
 	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
@@ -42,6 +43,7 @@
 
 	<ItemGroup>
 		<Compile Remove="Decoder.old.cs" />
+		<Compile Remove="Encoding\OidEncoding_optimized_unused.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -49,6 +51,7 @@
 			<Pack>True</Pack>
 			<PackagePath></PackagePath>
 		</None>
+		<None Include="Encoding\OidEncoding_optimized_unused.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

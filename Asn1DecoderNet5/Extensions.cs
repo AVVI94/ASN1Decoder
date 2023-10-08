@@ -535,8 +535,7 @@ namespace Asn1DecoderNet5
                         continue;
                     foreach (var e in ext.Childs[1].Childs[0].Childs)
                     {
-                        e.ConvertContentToReadableContent();
-                        switch (e.ReadableContent)
+                        switch (OID.GetOrCreate(e.Content).Value)
                         {
                             case OID.EKU_EMAIL_PROTECTION: eku.EmailProtection = true; ekuFound = true; break;
                             case OID.EKU_CLIENT_AUTH: eku.ClientAuth = true; ekuFound = true; break;
