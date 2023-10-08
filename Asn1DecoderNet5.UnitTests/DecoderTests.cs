@@ -10,6 +10,21 @@ namespace Asn1DecoderNet5.UnitTests
     public class DecoderTests
     {
         [Fact]
+        public void Should_GetEku_GetsEkuFromCert()
+        {
+            var tag = Decoder.Decode(Sources.NormalCertificateWithEmailInSan);
+            var ok = tag.TryGetExtendedKeyUsage(out var eku);
+            Assert.True(ok);
+            Assert.True(eku.EmailProtection);
+            Assert.False(eku.CodeSigning);
+            Assert.False(eku.OcspSigning);
+            Assert.False(eku.ClientAuth);
+            Assert.False(eku.ServerAuth);
+            Assert.False(eku.TimeStamping);
+            Assert.Null(eku.OtherEKUs);
+        }
+
+        [Fact]
         public void Should_GetSan_GetsSanFromCertRequest()
         {
             var tag = Decoder.Decode(Sources.CertRequestWithSan);

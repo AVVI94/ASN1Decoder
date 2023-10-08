@@ -26,6 +26,13 @@ namespace Asn1DecoderNet5
         public const string ICA_USER_ID = "1.3.6.1.4.1.23624.4.6";
         public const string ICA_IK_MPSV = "1.3.6.1.4.1.11801.2.1";
         public const string EXTENSION_REQUEST = "1.2.840.113549.1.9.14";
+        public const string EXT_KEY_USAGE = "2.5.29.37";
+        public const string EKU_SERVER_AUTH = "1.3.6.1.5.5.7.3.1";
+        public const string EKU_CLIENT_AUTH = "1.3.6.1.5.5.7.3.2";
+        public const string EKU_CODE_SIGNING = "1.3.6.1.5.5.7.3.3";
+        public const string EKU_EMAIL_PROTECTION = "1.3.6.1.5.5.7.3.4";
+        public const string EKU_TIME_STAMPING = "1.3.6.1.5.5.7.3.8";
+        public const string EKU_OCSP_SIGNING = "1.3.6.1.5.5.7.3.9";
 
         /// <summary>
         /// Constructor
@@ -99,8 +106,12 @@ namespace Asn1DecoderNet5
         /// Retrieves the OID from <see cref="OidDictionary"/> or creates a new OID and adds it to the dictionary
         /// </summary>
         /// <remarks>
-        /// Internally calls the <see cref="GetOrCreate(string)"/> overload, prefer that one if you can to avoid the string allocation.</remarks>
-        /// <param name="oid">OID value</param>
+        /// Internally calls the <see cref="GetOrCreate(string)"/> overload, prefer that one if you can to avoid the string allocation.
+        /// </remarks>
+        /// <param name="oid">
+        /// OID value<br/>
+        /// Internally calls the <see cref="GetOrCreate(string)"/> overload, prefer that one if you can to avoid the string allocation.
+        /// </param>
         /// <returns><see cref="OID"/> object</returns>
         public static OID GetOrCreate(byte[] oid) => GetOrCreate(Encoding.OidEncoding.GetString(oid));
 
@@ -1935,7 +1946,7 @@ namespace Asn1DecoderNet5
 {"2.5.29.34",new OID("2.5.29.34","policyConstraints","X.509 extension.  Deprecated use 2 5 29 36 instead")},
 {"2.5.29.35",new OID("2.5.29.35","authorityKeyIdentifier","X.509 extension")},
 {"2.5.29.36",new OID("2.5.29.36","policyConstraints","X.509 extension")},
-{"2.5.29.37",new OID("2.5.29.37","extKeyUsage","X.509 extension")},
+{EXT_KEY_USAGE,new OID(EXT_KEY_USAGE,"extKeyUsage","X.509 extension")},
 {"2.5.29.37.0",new OID("2.5.29.37.0","anyExtendedKeyUsage","X.509 extended key usage")},
 {"2.5.29.38",new OID("2.5.29.38","authorityAttributeIdentifier","X.509 extension")},
 {"2.5.29.39",new OID("2.5.29.39","roleSpecCertIdentifier","X.509 extension")},

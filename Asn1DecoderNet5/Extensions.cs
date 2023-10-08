@@ -17,6 +17,7 @@ namespace Asn1DecoderNet5
         static readonly byte[] _icaUserIdSequence = Encoding.OidEncoding.GetBytes(OID.ICA_USER_ID);
         static readonly byte[] _icaIkMpsvSequence = Encoding.OidEncoding.GetBytes(OID.ICA_IK_MPSV);
         static readonly byte[] _extensionRequestSequence = Encoding.OidEncoding.GetBytes(OID.EXTENSION_REQUEST);
+        static readonly byte[] _extKeyUsageSequence = Encoding.OidEncoding.GetBytes(OID.EXT_KEY_USAGE);
         public static string ToOidString(this SubjectItemKind subjectItem)
         {
             return subjectItem switch
@@ -425,7 +426,7 @@ namespace Asn1DecoderNet5
         /// </remarks>
         /// <param name="topLevelTag">Top level source tag</param>
         /// <param name="san">Result</param>
-        /// <returns></returns>
+        /// <returns><see langword="true" /> if SAN was found, otherwise <see langword="false" /></returns>
         public static bool TryGetSubjectAlternativeName(this ITag topLevelTag, out List<ISanItem> san)
         {
             san = new();
@@ -435,7 +436,7 @@ namespace Asn1DecoderNet5
                 {
                     if (!HasCertExtensions(topLevelTag))
                         return false;
-                    foreach (var item in topLevelTag.Childs[0].Childs[topLevelTag.Childs[0].Childs.Count - 1].Childs[0].Childs)
+                    foreach (var item in GetCretificateExtensions(topLevelTag))
                     {
                         if (!item.Childs[0].Content.SequenceEqual(_sanOidSequence))
                             continue;
@@ -447,7 +448,7 @@ namespace Asn1DecoderNet5
                 {
                     if (!HasRequestedExtensions(topLevelTag))
                         return false;
-                    foreach (var item in topLevelTag.Childs[0].Childs[topLevelTag.Childs[0].Childs.Count - 1].Childs[0].Childs[1].Childs[0].Childs)
+                    foreach (var item in GetRequestedExtensions(topLevelTag))
                     {
                         if (!item.Childs[0].Content.SequenceEqual(_sanOidSequence))
                             continue;
@@ -514,17 +515,61 @@ namespace Asn1DecoderNet5
             }
         }
 
-        private static bool HasCertExtensions(ITag topLevelCertificateTag)
+        /// <summary>
+        /// Attempts to find and parse ExtendedKeyUsage in a certificate tag. If it fails or the EKU is not present in the certificate or is empty, this method returns <see langword="false"/>.
+        /// </summary>
+        /// <param name="topLevelCertificateTag">Certificate tag</param>
+        /// <param name="eku">Result</param>
+        /// <returns><see langword="true" /> if any EKU value was found, otherwise <see langword="false" /></returns>
+        public static bool TryGetExtendedKeyUsage(this ITag topLevelCertificateTag, out ExtendedKeyUsageTag eku)
         {
-            return topLevelCertificateTag.Childs[0].Childs[topLevelCertificateTag.Childs[0].Childs.Count - 1].TagName == "[3]";
+            eku = new ExtendedKeyUsageTag();
+            try
+            {
+                if (!IsCertificate(topLevelCertificateTag) || !HasCertExtensions(topLevelCertificateTag))
+                    return false;
+                bool ekuFound = false;
+                foreach (var ext in GetCretificateExtensions(topLevelCertificateTag))
+                {
+                    if (!ext.Childs[0].Content.SequenceEqual(_extKeyUsageSequence))
+                        continue;
+                    foreach (var e in ext.Childs[1].Childs[0].Childs)
+                    {
+                        e.ConvertContentToReadableContent();
+                        switch (e.ReadableContent)
+                        {
+                            case OID.EKU_EMAIL_PROTECTION: eku.EmailProtection = true; ekuFound = true; break;
+                            case OID.EKU_CLIENT_AUTH: eku.ClientAuth = true; ekuFound = true; break;
+                            case OID.EKU_SERVER_AUTH: eku.ServerAuth = true; ekuFound = true; break;
+                            case OID.EKU_TIME_STAMPING: eku.TimeStamping = true; ekuFound = true; break;
+                            case OID.EKU_CODE_SIGNING: eku.CodeSigning = true; ekuFound = true; break;
+                            case OID.EKU_OCSP_SIGNING: eku.OcspSigning = true; ekuFound = true; break;
+                            default:
+                                eku.OtherEKUs ??= new List<OID>();
+                                ((List<OID>)eku.OtherEKUs).Add(OID.GetOrCreate(e.ReadableContent));
+                                ekuFound = true;
+                                break;
+                        }
+                    }
+                }
+                return ekuFound;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+        private static List<ITag> GetCretificateExtensions(ITag topLevelTag)
+        {
+            return topLevelTag.Childs[0].Childs[topLevelTag.Childs[0].Childs.Count - 1].Childs[0].Childs;
         }
 
-        private static bool HasRequestedExtensions(ITag topLevelCertRequestTag)
+        private static List<ITag> GetRequestedExtensions(ITag topLevelTag)
         {
-            return topLevelCertRequestTag.Childs[0].Childs[topLevelCertRequestTag.Childs[0].Childs.Count - 1].TagName == "[0]"
-                    && topLevelCertRequestTag.Childs[0].Childs[topLevelCertRequestTag.Childs[0].Childs.Count - 1]
-                                  .Childs[0].Childs[0].Content.SequenceEqual(_extensionRequestSequence);
+            return topLevelTag.Childs[0].Childs[topLevelTag.Childs[0].Childs.Count - 1].Childs[0].Childs[1].Childs[0].Childs;
         }
+
+
 
         #region Helpers
 
@@ -578,6 +623,17 @@ namespace Asn1DecoderNet5
             }
         }
 
+        private static bool HasCertExtensions(ITag topLevelCertificateTag)
+        {
+            return topLevelCertificateTag.Childs[0].Childs[topLevelCertificateTag.Childs[0].Childs.Count - 1].TagName == "[3]";
+        }
+        private static bool HasRequestedExtensions(ITag topLevelCertRequestTag)
+        {
+            return topLevelCertRequestTag.Childs[0].Childs[topLevelCertRequestTag.Childs[0].Childs.Count - 1].TagName == "[0]"
+                    && topLevelCertRequestTag.Childs[0].Childs[topLevelCertRequestTag.Childs[0].Childs.Count - 1]
+                                  .Childs[0].Childs[0].Content.SequenceEqual(_extensionRequestSequence);
+        }
+
         static bool IsSET(ITag t) => t.TagNumber == (int)Tags.Tags.SET;
         static string GetValue(ITag t)
         {
@@ -590,7 +646,6 @@ namespace Asn1DecoderNet5
         {
             return string.IsNullOrWhiteSpace(oid);
         }
-
         static bool IsOidNullOrEmpty(byte[] oid)
         {
             return oid is null or { Length: 0 };
