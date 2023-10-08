@@ -12,12 +12,13 @@ namespace Asn1DecoderNet5
         static readonly byte[] _version0Sequence = new byte[] { 0x00 };
         static readonly byte[] _version2Sequence = new byte[] { 0x02 };
         static readonly byte[] _booleanTrueSequence = new byte[] { 0xFF };
-        static readonly byte[] _keyUsageOidSequence = new byte[] { 0x55, 0x1D, 0x0f };
-        static readonly byte[] _sanOidSequence = new byte[] { 0x55, 0x1D, 0x11 };
+        static readonly byte[] _keyUsageOidSequence = Encoding.OidEncoding.GetBytes(OID.KEY_USAGE);
+        static readonly byte[] _sanOidSequence = Encoding.OidEncoding.GetBytes(OID.SUBJECT_ALT_NAME);
         static readonly byte[] _icaUserIdSequence = Encoding.OidEncoding.GetBytes(OID.ICA_USER_ID);
         static readonly byte[] _icaIkMpsvSequence = Encoding.OidEncoding.GetBytes(OID.ICA_IK_MPSV);
         static readonly byte[] _extensionRequestSequence = Encoding.OidEncoding.GetBytes(OID.EXTENSION_REQUEST);
         static readonly byte[] _extKeyUsageSequence = Encoding.OidEncoding.GetBytes(OID.EXT_KEY_USAGE);
+
         public static string ToOidString(this SubjectItemKind subjectItem)
         {
             return subjectItem switch
@@ -36,7 +37,9 @@ namespace Asn1DecoderNet5
             };
         }
 
-        #region KeyUsage
+        //X.509 v3 https://www.rfc-editor.org/rfc/rfc5280
+        //PKCS10 v1.7 https://datatracker.ietf.org/doc/html/rfc2986
+
         /// <summary>
         /// Attempts to find and parse key usage from the structure
         /// </summary>
@@ -79,17 +82,6 @@ namespace Asn1DecoderNet5
                 return false;
             }
         }
-
-        internal static bool IsKeyUsageSequence(this ITag tag)
-            => tag.Childs.Count == 3 && tag.Childs[0] is { TagNumber: (int)Tags.Tags.OBJECT_IDENTIFIER } oidTag && oidTag.Content.SequenceEqual(_keyUsageOidSequence);
-        internal static bool IsKeyUsageCritical(this ITag tag)
-            => tag.IsKeyUsageSequence() && tag.Childs[1] is { TagNumber: (int)Tags.Tags.BOOLEAN } boolTag && boolTag.Content.SequenceEqual(_booleanTrueSequence);
-        internal static ITag GetKeyUsageBitStringTag(this ITag tag)
-            => tag.Childs[2].Childs[0];
-        #endregion
-
-        //X.509 v3 https://www.rfc-editor.org/rfc/rfc5280
-        //PKCS10 v1.7 https://datatracker.ietf.org/doc/html/rfc2986
 
         /// <summary>
         /// Attempts to find the value for requested OID. Certificate can contain more than one value for requested OID, the values are ordered in the 'items' list as they were found in the structure.
@@ -558,17 +550,6 @@ namespace Asn1DecoderNet5
                 return false;
             }
         }
-        private static List<ITag> GetCretificateExtensions(ITag topLevelTag)
-        {
-            return topLevelTag.Childs[0].Childs[topLevelTag.Childs[0].Childs.Count - 1].Childs[0].Childs;
-        }
-
-        private static List<ITag> GetRequestedExtensions(ITag topLevelTag)
-        {
-            return topLevelTag.Childs[0].Childs[topLevelTag.Childs[0].Childs.Count - 1].Childs[0].Childs[1].Childs[0].Childs;
-        }
-
-
 
         #region Helpers
 
@@ -622,17 +603,16 @@ namespace Asn1DecoderNet5
             }
         }
 
-        private static bool HasCertExtensions(ITag topLevelCertificateTag)
+        static bool HasCertExtensions(ITag topLevelCertificateTag)
         {
             return topLevelCertificateTag.Childs[0].Childs[topLevelCertificateTag.Childs[0].Childs.Count - 1].TagName == "[3]";
         }
-        private static bool HasRequestedExtensions(ITag topLevelCertRequestTag)
+        static bool HasRequestedExtensions(ITag topLevelCertRequestTag)
         {
             return topLevelCertRequestTag.Childs[0].Childs[topLevelCertRequestTag.Childs[0].Childs.Count - 1].TagName == "[0]"
                     && topLevelCertRequestTag.Childs[0].Childs[topLevelCertRequestTag.Childs[0].Childs.Count - 1]
                                   .Childs[0].Childs[0].Content.SequenceEqual(_extensionRequestSequence);
         }
-
         static bool IsSET(ITag t) => t.TagNumber == (int)Tags.Tags.SET;
         static string GetValue(ITag t)
         {
@@ -640,7 +620,6 @@ namespace Asn1DecoderNet5
                 t.Childs[0].Childs[1].ConvertContentToReadableContent();
             return t.Childs[0].Childs[1].ReadableContent;
         }
-
         static bool IsOidNullOrEmpty(string oid)
         {
             return string.IsNullOrWhiteSpace(oid);
@@ -650,6 +629,21 @@ namespace Asn1DecoderNet5
             return oid is null or { Length: 0 };
 
         }
+        static List<ITag> GetCretificateExtensions(ITag topLevelTag)
+        {
+            return topLevelTag.Childs[0].Childs[topLevelTag.Childs[0].Childs.Count - 1].Childs[0].Childs;
+        }
+        static List<ITag> GetRequestedExtensions(ITag topLevelTag)
+        {
+            return topLevelTag.Childs[0].Childs[topLevelTag.Childs[0].Childs.Count - 1].Childs[0].Childs[1].Childs[0].Childs;
+        }
+        internal static bool IsKeyUsageSequence(this ITag tag)
+            => tag.Childs.Count == 3 && tag.Childs[0] is { TagNumber: (int)Tags.Tags.OBJECT_IDENTIFIER } oidTag && oidTag.Content.SequenceEqual(_keyUsageOidSequence);
+        internal static bool IsKeyUsageCritical(this ITag tag)
+            => tag.IsKeyUsageSequence() && tag.Childs[1] is { TagNumber: (int)Tags.Tags.BOOLEAN } boolTag && boolTag.Content.SequenceEqual(_booleanTrueSequence);
+        internal static ITag GetKeyUsageBitStringTag(this ITag tag)
+            => tag.Childs[2].Childs[0];
+
         #endregion
     }
 
