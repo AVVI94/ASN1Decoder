@@ -1,22 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net7.0;net6.0;
-			net5.0;
-			net45;
-			net461;
-			net47;
-			net48;
-			NETSTANDARD2.1;
-			NETSTANDARD2.0;
-		</TargetFrameworks>
-		<Product>ASN1DecoderNet5</Product>
+		<TargetFrameworks>net45;NETSTANDARD2.0;</TargetFrameworks>
+		<Product>ASN1Decoder</Product>
 		<Company />
 		<ApplicationIcon />
 		<Win32Resource />
-		<Version>1.5.3</Version>
+		<Version>1.6.0</Version>
 		<LangVersion>latest</LangVersion>
-		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>		
 	</PropertyGroup>
 	
 	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
@@ -30,9 +21,9 @@
 		<PackageIcon>ASN1Logo.PNG</PackageIcon>
 		<PackageIconUrl />
 		<PackageTags>certificate, asn1, asn, der, pem, cer, decoder, crypto</PackageTags>
-		<PackageReleaseNotes>Fixed crash if OID does not exists in the dictionary, organizationIdentifier OID added (2.5.4.97)</PackageReleaseNotes>
+		<PackageReleaseNotes>Added extension methods for easier data parsing. Revisited OID class. Decoding (OID parsing) optimizations.</PackageReleaseNotes>
 		<NeutralLanguage>en</NeutralLanguage>
-		<Description>Aims to make decoding DER encoded data into ASN1 structure, that is easily readable by human, to be very easy</Description>
+		<Description>This library aims to facilitate the parsing of ASN.1 data. It provides a data decoder and a set of methods for their parsing.</Description>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
 		
@@ -40,11 +31,6 @@
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
 		<PlatformTarget>AnyCPU</PlatformTarget>
 	</PropertyGroup>
-
-	<ItemGroup>
-		<Compile Remove="Decoder.old.cs" />
-	</ItemGroup>
-
 	<ItemGroup>
 		<None Include="ASN1Logo.PNG">
 			<Pack>True</Pack>

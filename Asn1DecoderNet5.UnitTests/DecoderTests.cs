@@ -40,6 +40,17 @@ namespace Asn1DecoderNet5.UnitTests
             var ok = tag.TryGetSubjectAlternativeName(out var san);
             Assert.True(ok);
             Assert.NotEmpty(san);
+            Tags.SAN.Rfc822Name email = null;
+            foreach (var item in san)
+            {
+                if (item.ItemKind == Tags.SAN.SanItemKind.Rfc822Name)
+                {
+                    email = (Tags.SAN.Rfc822Name)item;
+                    break;
+                }
+            }
+            Assert.NotNull(email);
+            Assert.Equal("kral@ica.cz", email.Content);
         }
 
         [Fact]
