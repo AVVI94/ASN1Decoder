@@ -7,7 +7,7 @@ using Asn1DecoderNet5.Interfaces;
 namespace Asn1DecoderNet5;
 internal class ActualEncoder
 {
-    internal static List<byte> Encode(ITag tag)
+    internal static List<byte> Encode(IReadOnlyTag tag)
     {
         var res = new List<byte>();
         var res2 = new List<byte>();

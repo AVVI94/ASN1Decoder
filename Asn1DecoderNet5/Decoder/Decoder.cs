@@ -140,7 +140,7 @@ namespace Asn1DecoderNet5
         #endregion
 
         #region publicAPI
-        public static byte[] Encode(ITag data)
+        public static byte[] Encode(IReadOnlyTag data)
         {
             return ActualEncoder.Encode(data).ToArray();
         }

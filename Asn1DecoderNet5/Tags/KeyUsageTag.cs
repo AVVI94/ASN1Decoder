@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Asn1DecoderNet5.Interfaces;
@@ -49,6 +50,8 @@ public struct KeyUsageTag : ITag
 
     public readonly KeyUsage KeyUsage { get; }
 
+    readonly IReadOnlyList<IReadOnlyTag> IReadOnlyTag.Childs => Childs.Cast<IReadOnlyTag>().ToList();
+
     public void ConvertContentToReadableContent()
     {
         ReadableContent = Tag.ParseBitString(Content);
@@ -59,27 +62,60 @@ public struct KeyUsageTag : ITag
 /// </summary>
 public readonly struct KeyUsage
 {
-    public KeyUsage(bool[] keyUsages, bool critical, bool decipherOnly) : this()
+    internal KeyUsage(bool[] keyUsages, bool critical, bool decipherOnly) : this()
     {
         KeyUsages = keyUsages;
         Critical = critical;
         DecipherOnly = decipherOnly;
     }
+    /// <summary>
+    /// Creates new KeyUsage representation, using this variant the KeyUsage will be set to DecipherOnly!
+    /// </summary>
+    /// <param name="critical"></param>
+    public KeyUsage(bool critical)
+    {
+        DecipherOnly = true;
+        KeyUsages = new bool[8];
+        Critical = critical;
+    }
+    public KeyUsage(bool critical,
+                    bool digitalSignature = false,
+                    bool nonRepudiation = false,
+                    bool keyEncipherment = false,
+                    bool dataEncipherment = false,
+                    bool keyAgreement = false,
+                    bool keyCertSign = false,
+                    bool cRLSign = false,
+                    bool encipherOnly = false)
+    {
+        Critical = critical;
+        KeyUsages = new bool[8]
+        {
+            digitalSignature,
+            nonRepudiation,
+            keyEncipherment,
+            dataEncipherment,
+            keyAgreement,
+            keyCertSign,
+            cRLSign,
+            encipherOnly,
+        };
+    }
 #nullable enable
     public readonly bool[]? KeyUsages { get; }
 #nullable restore
 
-    public readonly bool DigitalSignature => KeyUsages[0];
-    public readonly bool NonRepudiation => KeyUsages[1];
-    public readonly bool KeyEncipherment => KeyUsages[2];
-    public readonly bool DataEncipherment => KeyUsages[3];
-    public readonly bool KeyAgreement => KeyUsages[4];
+    public readonly bool DigitalSignature => KeyUsages?[0] ?? false;
+    public readonly bool NonRepudiation => KeyUsages?[1] ?? false;
+    public readonly bool KeyEncipherment => KeyUsages?[2] ?? false;
+    public readonly bool DataEncipherment => KeyUsages?[3] ?? false;
+    public readonly bool KeyAgreement => KeyUsages?[4] ?? false;
     /// <summary>
     /// CodeSign
     /// </summary>
-    public readonly bool KeyCertSign => KeyUsages[5];
-    public readonly bool CRLSign => KeyUsages[6];
-    public readonly bool EncipherOnly => KeyUsages[7];
+    public readonly bool KeyCertSign => KeyUsages?[5] ?? false;
+    public readonly bool CRLSign => KeyUsages?[6] ?? false;
+    public readonly bool EncipherOnly => KeyUsages?[7] ?? false;
     public readonly bool DecipherOnly { get; }
     public readonly bool Critical { get; }
 

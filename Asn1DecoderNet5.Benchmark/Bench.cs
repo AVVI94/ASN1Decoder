@@ -23,13 +23,13 @@ namespace Asn1DecoderNet5.Benchmark
         public void TagToString() => Decoder.TagToString(tag, "", 128);
 
         //[Benchmark]
-        public byte[] OidToBytes() => Encoding.OidEncoding.GetBytes("1.2.840.113549.1.1.11");
+        public byte[] OidToBytes() => OIDEncoding.OidEncoding.GetBytes("1.2.840.113549.1.1.11");
 
         //[Benchmark]
         public bool IsCert() => tag.IsCertificate();
 
         static byte[] _oid = new byte[] { 0x2A, 0x86, 0x48, 0x86, 0xF7, 0x0D, 0x01, 0x01, 0x0B, };
         [Benchmark]
-        public string OidToString() => Encoding.OidEncoding.GetString(_oid);
+        public string OidToString() => OIDEncoding.OidEncoding.GetString(_oid);
     }
 }

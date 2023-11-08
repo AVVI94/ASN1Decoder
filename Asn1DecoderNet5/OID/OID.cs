@@ -34,6 +34,7 @@ namespace Asn1DecoderNet5
         public const string EKU_EMAIL_PROTECTION = "1.3.6.1.5.5.7.3.4";
         public const string EKU_TIME_STAMPING = "1.3.6.1.5.5.7.3.8";
         public const string EKU_OCSP_SIGNING = "1.3.6.1.5.5.7.3.9";
+        public const string RSA_ENCRYPTION = "1.2.840.113549.1.1.1";
 
         /// <summary>
         /// Constructor
@@ -61,7 +62,7 @@ namespace Asn1DecoderNet5
                 throw new ArgumentNullException(nameof(value));
             }
             _byteValue = value;
-            Value = Encoding.OidEncoding.GetString(value);
+            Value = OIDEncoding.OidEncoding.GetString(value);
             FriendlyName = friendlyName;
             Comment = comment;
         }
@@ -85,7 +86,7 @@ namespace Asn1DecoderNet5
         /// </summary>
         public byte[] ByteValue
         {
-            get { return _byteValue ??= Encoding.OidEncoding.GetBytes(Value); }
+            get { return _byteValue ??= OIDEncoding.OidEncoding.GetBytes(Value); }
         }
 
         /// <summary>
@@ -114,7 +115,7 @@ namespace Asn1DecoderNet5
         /// Internally calls the <see cref="GetOrCreate(string)"/> overload, prefer that one if you can to avoid the string allocation.
         /// </param>
         /// <returns><see cref="OID"/> object</returns>
-        public static OID GetOrCreate(byte[] oid) => GetOrCreate(Encoding.OidEncoding.GetString(oid));
+        public static OID GetOrCreate(byte[] oid) => GetOrCreate(OIDEncoding.OidEncoding.GetString(oid));
 
         /// <summary>
         /// Dictionary of existing common OID objects, the key is OID string for example "2.5.29.29"

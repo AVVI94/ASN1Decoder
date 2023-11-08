@@ -88,7 +88,7 @@ namespace Asn1DecoderNet5.UnitTests
         public void GetCommonName()
         {
             var tag = Decoder.Decode(Sources.NormalCertificate);
-            var ok = tag.TryGetSubjectItem(Encoding.OidEncoding.GetBytes(OID.COMMON_NAME), out var items);
+            var ok = tag.TryGetSubjectItem(OIDEncoding.OidEncoding.GetBytes(OID.COMMON_NAME), out var items);
             Assert.True(ok);
             Assert.NotEmpty(items);
         }

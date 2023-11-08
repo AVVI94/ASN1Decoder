@@ -11,13 +11,13 @@ namespace Asn1DecoderNet5
     {
         static readonly byte[] _version0Sequence = new byte[] { 0x00 };
         static readonly byte[] _version2Sequence = new byte[] { 0x02 };
-        static readonly byte[] _booleanTrueSequence = new byte[] { 0xFF };
-        static readonly byte[] _keyUsageOidSequence = Encoding.OidEncoding.GetBytes(OID.KEY_USAGE);
-        static readonly byte[] _sanOidSequence = Encoding.OidEncoding.GetBytes(OID.SUBJECT_ALT_NAME);
-        static readonly byte[] _icaUserIdSequence = Encoding.OidEncoding.GetBytes(OID.ICA_USER_ID);
-        static readonly byte[] _icaIkMpsvSequence = Encoding.OidEncoding.GetBytes(OID.ICA_IK_MPSV);
-        static readonly byte[] _extensionRequestSequence = Encoding.OidEncoding.GetBytes(OID.EXTENSION_REQUEST);
-        static readonly byte[] _extKeyUsageSequence = Encoding.OidEncoding.GetBytes(OID.EXT_KEY_USAGE);
+        internal static readonly byte[] _booleanTrueSequence = new byte[] { 0xFF };
+        static readonly byte[] _keyUsageOidSequence = OIDEncoding.OidEncoding.GetBytes(OID.KEY_USAGE);
+        static readonly byte[] _sanOidSequence = OIDEncoding.OidEncoding.GetBytes(OID.SUBJECT_ALT_NAME);
+        static readonly byte[] _icaUserIdSequence = OIDEncoding.OidEncoding.GetBytes(OID.ICA_USER_ID);
+        static readonly byte[] _icaIkMpsvSequence = OIDEncoding.OidEncoding.GetBytes(OID.ICA_IK_MPSV);
+        static readonly byte[] _extensionRequestSequence = OIDEncoding.OidEncoding.GetBytes(OID.EXTENSION_REQUEST);
+        static readonly byte[] _extKeyUsageSequence = OIDEncoding.OidEncoding.GetBytes(OID.EXT_KEY_USAGE);
 
         public static string ToOidString(this SubjectItemKind subjectItem)
         {
@@ -168,11 +168,11 @@ namespace Asn1DecoderNet5
 
             if (forIssuer)
             {
-                return TryGetSubjectItem(topLevelTag.Childs[0].Childs[3], Encoding.OidEncoding.GetBytes(oid), out items);
+                return TryGetSubjectItem(topLevelTag.Childs[0].Childs[3], OIDEncoding.OidEncoding.GetBytes(oid), out items);
             }
             else
             {
-                return TryGetSubjectItem(topLevelTag.Childs[0].Childs[5], Encoding.OidEncoding.GetBytes(oid), out items);
+                return TryGetSubjectItem(topLevelTag.Childs[0].Childs[5], OIDEncoding.OidEncoding.GetBytes(oid), out items);
             }
         }
 
@@ -245,7 +245,7 @@ namespace Asn1DecoderNet5
                 if (IsOidNullOrEmpty(oid) || !IsCertificateRequest(topLevelTag))
                     return false;
                 topLevelTag = topLevelTag.Childs[0].Childs[1];
-                return TryGetSubjectItem(topLevelTag, Encoding.OidEncoding.GetBytes(oid), out items);
+                return TryGetSubjectItem(topLevelTag, OIDEncoding.OidEncoding.GetBytes(oid), out items);
             }
             catch
             {
@@ -273,7 +273,7 @@ namespace Asn1DecoderNet5
         /// <returns><see langword="true" /> if any value was found, otherwise <see langword="false" /></returns>
         public static bool TryGetSubjectItem(this ITag tag, SubjectItemKind kind, out List<string> items)
         {
-            return TryGetSubjectItem(tag, Encoding.OidEncoding.GetBytes(kind.ToOidString()), out items);
+            return TryGetSubjectItem(tag, OIDEncoding.OidEncoding.GetBytes(kind.ToOidString()), out items);
         }
 
         /// <summary>
@@ -291,7 +291,7 @@ namespace Asn1DecoderNet5
         /// </code>
         /// </remarks>
         /// <param name="tag">Parent tag</param>
-        /// <param name="oid">Requested OID in byte array representation. <see cref="Asn1DecoderNet5.Encoding.OidEncoding"/> can be used to convert it from a string representation.</param>
+        /// <param name="oid">Requested OID in byte array representation. <see cref="Asn1DecoderNet5.OIDEncoding.OidEncoding"/> can be used to convert it from a string representation.</param>
         /// <param name="items">The value</param>
         /// <returns><see langword="true" /> if any value was found, otherwise <see langword="false" /></returns>
         public static bool TryGetSubjectItem(this ITag tag, byte[] oid, out List<string> items)

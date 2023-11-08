@@ -97,6 +97,7 @@ namespace Asn1DecoderNet5.Tags
         /// <inheritdoc/>
         /// </summary>
         public List<ITag> Childs { get; set; }
+        readonly IReadOnlyList<IReadOnlyTag> IReadOnlyTag.Childs => Childs.Cast<IReadOnlyTag>().ToList();
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
@@ -142,7 +143,7 @@ namespace Asn1DecoderNet5.Tags
 
         readonly string ParseOid()
         {
-            var oid = Encoding.OidEncoding.GetString(Content);
+            var oid = OIDEncoding.OidEncoding.GetString(Content);
 
             var retVal = OID.OidDictionary.TryGetValue(oid, out var _oid);
             if (retVal)

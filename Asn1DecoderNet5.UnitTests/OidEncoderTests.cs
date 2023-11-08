@@ -14,7 +14,7 @@ namespace Asn1DecoderNet5.UnitTests
         [InlineData("1.2.840.113549.1.1.11", new byte[] { 0x2A, 0x86, 0x48, 0x86, 0xF7, 0x0D, 0x01, 0x01, 0x0B, })]
         public void Should_FromString(string oid, byte[] expectedOutput)
         {
-            var b = Asn1DecoderNet5.Encoding.OidEncoding.GetBytes(oid);
+            var b = Asn1DecoderNet5.OIDEncoding.OidEncoding.GetBytes(oid);
             Assert.Equal(expectedOutput, b);
         }
 
@@ -23,7 +23,7 @@ namespace Asn1DecoderNet5.UnitTests
         [InlineData("1.2.840.113549.1.1.11", new byte[] { 0x2A, 0x86, 0x48, 0x86, 0xF7, 0x0D, 0x01, 0x01, 0x0B, })]
         public void Should_ToString(string expected, byte[] oid)
         {
-            var b = Asn1DecoderNet5.Encoding.OidEncoding.GetString(oid);
+            var b = Asn1DecoderNet5.OIDEncoding.OidEncoding.GetString(oid);
             Assert.Equal(expected, b);
         }
     }
