@@ -1,7 +1,7 @@
 # ASN1Decoder
 This library aims to facilitate the parsing of ASN.1 data. It provides a data decoder and a set of methods for their parsing.
 
-[NuGet package](www.nuget.org/packages/Asn1DecoderNet5)
+NuGet package: www.nuget.org/packages/Asn1DecoderNet5
 
 ## Decoding
 
