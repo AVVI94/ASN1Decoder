@@ -35,9 +35,9 @@ SEQUENCE
 ...
 ```
 
-### Check if the data is X.509 v3 certificate
+### Check if the data are X.509 v3 certificate
 
-To check if the data is actual X.509 certificate use this extension method:
+To check if the data are actual X.509 certificate use this extension method:
 
 ```cs
 bool isCert = decodedDataStructure.IsCertificate();
