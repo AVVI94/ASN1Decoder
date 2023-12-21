@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Asn1DecoderNet5\Asn1DecoderNet5.csproj" />
+    <ProjectReference Include="..\Asn1Decoder\Asn1Decoder.csproj" />
   </ItemGroup>
 
 </Project>
