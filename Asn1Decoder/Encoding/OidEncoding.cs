@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Asn1DecoderNet5.Encoding
+namespace Asn1Decoder.Encoding
 {
     /// <summary>
     /// Class for help with Encoding/Decoding the OID values

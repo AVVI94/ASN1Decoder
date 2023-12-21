@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Asn1DecoderNet5
+namespace Asn1Decoder
 {
     /// <summary>
     /// Class representing Object Identifier

@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Asn1DecoderNet5.Interfaces;
-namespace Asn1DecoderNet5.Tags;
+using Asn1Decoder.Interfaces;
+namespace Asn1Decoder.Tags;
 /// <summary>
 /// Tag representing KeyUsage BIT_STRING tag
 /// </summary>

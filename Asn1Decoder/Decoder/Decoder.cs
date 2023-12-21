@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Asn1DecoderNet5.Interfaces;
-using Asn1DecoderNet5.Tags;
+using Asn1Decoder.Interfaces;
+using Asn1Decoder.Tags;
 
-namespace Asn1DecoderNet5
+namespace Asn1Decoder
 {
     /// <summary>
     /// ASN1 Decoder

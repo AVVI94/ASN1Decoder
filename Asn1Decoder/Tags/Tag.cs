@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Text;
-using Asn1DecoderNet5.Interfaces;
+using Asn1Decoder.Interfaces;
 
-namespace Asn1DecoderNet5.Tags
+namespace Asn1Decoder.Tags
 {
     /// <summary>
     /// Tag class

@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Asn1DecoderNet5.Interfaces;
+using Asn1Decoder.Interfaces;
 
-namespace Asn1DecoderNet5.Tags.SAN;
+namespace Asn1Decoder.Tags.SAN;
 
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 #nullable enable

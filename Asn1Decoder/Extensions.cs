@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Asn1DecoderNet5.Interfaces;
-using Asn1DecoderNet5.Tags;
-using Asn1DecoderNet5.Tags.SAN;
+using Asn1Decoder.Interfaces;
+using Asn1Decoder.Tags;
+using Asn1Decoder.Tags.SAN;
 
-namespace Asn1DecoderNet5
+namespace Asn1Decoder
 {
     public static class Extensions
     {
@@ -239,7 +239,7 @@ namespace Asn1DecoderNet5
         /// </code>
         /// </remarks>
         /// <param name="tag">Parent tag</param>
-        /// <param name="oid">Requested OID in byte array representation. <see cref="Asn1DecoderNet5.Encoding.OidEncoding"/> can be used to convert it from a string representation.</param>
+        /// <param name="oid">Requested OID in byte array representation. <see cref="Asn1Decoder.Encoding.OidEncoding"/> can be used to convert it from a string representation.</param>
         /// <param name="items">The value</param>
         /// <returns><see langword="true" /> if any value was found, otherwise <see langword="false" /></returns>
         public static bool TryGetSubjectItem(this ITag tag, byte[] oid, out List<string> items)

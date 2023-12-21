@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Asn1DecoderNet5.Interfaces;
+using Asn1Decoder.Interfaces;
 using BenchmarkDotNet.Attributes;
 
-namespace Asn1DecoderNet5.Benchmark
+namespace Asn1Decoder.Benchmark
 {
     [MemoryDiagnoser]
     public class Bench

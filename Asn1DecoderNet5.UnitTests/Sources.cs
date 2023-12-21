@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Asn1DecoderNet5.UnitTests
+namespace Asn1Decoder.UnitTests
 {
     static class Sources
     {

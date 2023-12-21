@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Asn1DecoderNet5.Tags;
+namespace Asn1Decoder.Tags;
 
 #nullable enable
 public struct ExtendedKeyUsageTag

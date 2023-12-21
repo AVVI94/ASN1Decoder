@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Asn1DecoderNet5.Tags;
+namespace Asn1Decoder.Tags;
 public class RelativeDistinguishedName
 {
     public RelativeDistinguishedName(OID oid, string value)
