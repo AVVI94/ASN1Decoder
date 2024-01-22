@@ -342,7 +342,7 @@ namespace Asn1DecoderNet5
         /// </item>
         /// <item>
         /// <term><see cref="SanItemKind.EdiPartyName"/></term>
-        /// <description><see cref="EidPartyName"/></description>
+        /// <description><see cref="EdiPartyName"/></description>
         /// </item>
         /// <item>
         /// <term><see cref="SanItemKind.UniformResourceIdentifier"/></term>
@@ -428,7 +428,7 @@ namespace Asn1DecoderNet5
                             san.Add(new DirectoryName(sanItem.Childs[0]));
                             break;
                         case "[5]":
-                            san.Add(new EidPartyName(sanItem.Childs[0]));
+                            san.Add(new EdiPartyName(sanItem.Childs[0]));
                             break;
                         case "[6]":
                             sanItem.ConvertContentToReadableContent();
@@ -450,11 +450,16 @@ namespace Asn1DecoderNet5
         }
 
         /// <summary>
-        /// Should the method fail to find the Extended Key Usage (EKU) in the certificate tag or if the EKU is not present or is empty, it will return <see langword="false"/>.
+        /// Attempts to retrieve the Extended Key Usage (EKU) from the specified certificate tag. If the EKU is found,
+        /// the method sets the <paramref name="eku"/> parameter with the relevant information and returns <see langword="true"/>.
+        /// If the EKU is not found, or if the certificate tag is invalid or lacks extensions, it returns <see langword="false"/>.
         /// </summary>
-        /// <param name="topLevelCertificateTag">Certificate tag</param>
-        /// <param name="eku">Result</param>
-        /// <returns><see langword="true" /> if any EKU value was found, otherwise <see langword="false" /></returns>
+        /// <param name="topLevelCertificateTag">The certificate tag to extract Extended Key Usage from.</param>
+        /// <param name="eku">An <see cref="ExtendedKeyUsageTag"/> object containing the EKU information if found.</param>
+        /// <returns>
+        /// <see langword="true"/> if any Extended Key Usage value was found and extracted successfully; 
+        /// otherwise, <see langword="false"/>.
+        /// </returns>
         public static bool TryGetExtendedKeyUsage(this ITag topLevelCertificateTag, out ExtendedKeyUsageTag eku)
         {
             eku = new ExtendedKeyUsageTag();
@@ -493,6 +498,29 @@ namespace Asn1DecoderNet5
             }
         }
 
+#nullable enable
+        public static bool TryGetICACertIntercon(this ITag topLevelCertificateTag, out ICACertIntercon intercon)
+        {
+            intercon = default;
+            if (!IsCertificate(topLevelCertificateTag) || !HasCertExtensions(topLevelCertificateTag))
+                return false;
+            var ext = GetCretificateExtensions(topLevelCertificateTag);
+            foreach (var item in ext)
+            {
+                if (OID.GetOrCreate(item.Childs[0].Content).Value != OID.ICA_CERT_INTERCONNECTION)
+                    continue;
+                var masterReqId = item.Childs[1].Childs[0].Childs[0];
+                masterReqId.ConvertContentToReadableContent();
+                var certCount = item.Childs[1].Childs[0].Childs[1];
+                certCount.ConvertContentToReadableContent();
+                intercon = new ICACertIntercon(item.Childs[1].Childs[0].Childs[2].Content.SequenceEqual(_booleanTrueSequence),
+                                               masterReqId.ReadableContent,
+                                               int.Parse(certCount.ReadableContent));
+                return true;
+            }
+            return false;
+        }
+#nullable restore
         #region Helpers
 
         /// <summary>
@@ -606,5 +634,39 @@ namespace Asn1DecoderNet5
         Locality,
         SerialNumber,
         Title,
+    }
+
+    /// <summary>
+    /// Represents an I.CA Certificate Interconnection structure.
+    /// </summary>
+    public readonly record struct ICACertIntercon
+    {
+        /// <summary>
+        /// Creates a new instance of the I.CA Certificate Interconnection
+        /// </summary>
+        /// <param name="isMaster">Specifies if the certificate this structure was parsed from is a master certificate</param>
+        /// <param name="masterRequestId">The master's certificate request ID</param>
+        /// <param name="interconnectedCertificatesCount">The number of certificates that are interconnected</param>
+        public ICACertIntercon(bool isMaster, string masterRequestId, int interconnectedCertificatesCount)
+        {
+            IsMaster = isMaster;
+            MasterRequestId = masterRequestId;
+            InterconnectedCertificatesCount = interconnectedCertificatesCount;
+        }
+
+        /// <summary>
+        /// Indicating whether the certificate is a master certificate
+        /// </summary>
+        public readonly bool IsMaster { get; }
+
+        /// <summary>
+        /// The master's certificate request ID
+        /// </summary>
+        public readonly string MasterRequestId { get; }
+
+        /// <summary>
+        /// The number of certificates that are interconnected
+        /// </summary>
+        public readonly int InterconnectedCertificatesCount { get; }
     }
 }

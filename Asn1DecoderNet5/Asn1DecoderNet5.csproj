@@ -6,7 +6,7 @@
 		<Company />
 		<ApplicationIcon />
 		<Win32Resource />
-		<Version>1.6.0</Version>
+		<Version>1.6.1</Version>
 		<LangVersion>latest</LangVersion>
 	</PropertyGroup>
 	
@@ -21,7 +21,7 @@
 		<PackageIcon>ASN1Logo.PNG</PackageIcon>
 		<PackageIconUrl />
 		<PackageTags>certificate, asn1, asn, der, pem, cer, decoder, crypto</PackageTags>
-		<PackageReleaseNotes>Added extension methods for easier data parsing. Revisited OID class. Decoding (OID parsing) optimizations.</PackageReleaseNotes>
+		<PackageReleaseNotes>Added extension method. Renamed EidPartyName to EdiPartyName</PackageReleaseNotes>
 		<NeutralLanguage>en</NeutralLanguage>
 		<Description>This library aims to facilitate the parsing of ASN.1 data. It provides a data decoder and a set of methods for their parsing.</Description>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>

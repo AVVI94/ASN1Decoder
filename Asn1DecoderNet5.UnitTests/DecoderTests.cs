@@ -10,6 +10,16 @@ namespace Asn1DecoderNet5.UnitTests
     public class DecoderTests
     {
         [Fact]
+        public void Should_Get_CertInterctonFromCert()
+        {
+            var tag = Decoder.Decode(Sources.TwinsCertificate);
+            var ok = tag.TryGetICACertIntercon(out var inter);
+            Assert.True(ok);
+            Assert.True(inter.IsMaster);
+            Assert.Equal("5706610001143", inter.MasterRequestId);
+        }
+
+        [Fact]
         public void Should_GetEku_GetsEkuFromCert()
         {
             var tag = Decoder.Decode(Sources.NormalCertificateWithEmailInSan);
