@@ -11,13 +11,13 @@ namespace Asn1DecoderNet5
     {
         static readonly byte[] _version0Sequence = new byte[] { 0x00 };
         static readonly byte[] _version2Sequence = new byte[] { 0x02 };
-        internal static readonly byte[] _booleanTrueSequence = new byte[] { 0xFF };
-        static readonly byte[] _keyUsageOidSequence = OIDEncoding.OidEncoding.GetBytes(OID.KEY_USAGE);
-        static readonly byte[] _sanOidSequence = OIDEncoding.OidEncoding.GetBytes(OID.SUBJECT_ALT_NAME);
-        static readonly byte[] _icaUserIdSequence = OIDEncoding.OidEncoding.GetBytes(OID.ICA_USER_ID);
-        static readonly byte[] _icaIkMpsvSequence = OIDEncoding.OidEncoding.GetBytes(OID.ICA_IK_MPSV);
-        static readonly byte[] _extensionRequestSequence = OIDEncoding.OidEncoding.GetBytes(OID.EXTENSION_REQUEST);
-        static readonly byte[] _extKeyUsageSequence = OIDEncoding.OidEncoding.GetBytes(OID.EXT_KEY_USAGE);
+        static readonly byte[] _booleanTrueSequence = new byte[] { 0xFF };
+        static readonly byte[] _keyUsageOidSequence = OID.GetOrCreate(OID.KEY_USAGE).ByteValue;
+        static readonly byte[] _sanOidSequence = OID.GetOrCreate(OID.SUBJECT_ALT_NAME).ByteValue;
+        static readonly byte[] _icaUserIdSequence = OID.GetOrCreate(OID.ICA_USER_ID).ByteValue;
+        static readonly byte[] _icaIkMpsvSequence = OID.GetOrCreate(OID.ICA_IK_MPSV).ByteValue;
+        static readonly byte[] _extensionRequestSequence = OID.GetOrCreate(OID.EXTENSION_REQUEST).ByteValue;
+        static readonly byte[] _extKeyUsageSequence = OID.GetOrCreate(OID.EXT_KEY_USAGE).ByteValue;
 
         public static string ToOidString(this SubjectItemKind subjectItem)
         {
@@ -43,7 +43,7 @@ namespace Asn1DecoderNet5
         /// <summary>
         /// Attempts to find and parse key usage from the structure
         /// </summary>
-        /// <param name="tag">Element whose children will be searched and parsed</param>
+        /// <param name="tag">Represents the element in which its children will be searched and parsed</param>
         /// <param name="keyUsage">The value</param>
         /// <returns><see langword="true" /> if KeyUsage was found, otherwise <see langword="false" /></returns>
         public static bool TryGetKeyUsage(this ITag tag, out KeyUsage keyUsage)
@@ -88,24 +88,8 @@ namespace Asn1DecoderNet5
         /// </summary>
         /// <remarks>
         /// The Issuer and Subject elements are parsed based on this structure:
-        /// <code>
-        /// this.Childs[0]
-        ///         .Childs[0]: Version
-        ///         .Childs[1]: Serial Number
-        ///         .Childs[2]: Signature Algorithm
-        ///         .Childs[3]: Issuer
-        ///         .Childs[4]: Validity
-        ///             .Childs[0]:  - Not Before
-        ///             .Childs[1]:  - Not After
-        ///         .Childs[5]: Subject
-        ///         .Childs[6]: Public Key Information
-        ///             .Childs[0]:  - Public Key Algorithm
-        ///             .Childs[1]:  - Public Key
-        /// </code>
-        /// <br/>
-        /// <br/>
-        /// The OID is matched based on the X.509 v3, meaning the OID is expected to has a parent element of type SEQUENCE, which has a parent element of type SET, 
-        /// the value is taken from the second element of the SEQUENCE element.<br/>
+        /// The OID is matched based on the X.509 v3, meaning the OID is expected to have a parent element of type SEQUENCE, which has a parent element of type SET, 
+        /// and the value is taken from the second element of the SEQUENCE element.<br/>
         /// Example of a correct SET element:
         /// <code>
         /// SET
@@ -129,24 +113,8 @@ namespace Asn1DecoderNet5
         /// </summary>
         /// <remarks>
         /// The Issuer and Subject elements are parsed based on this structure:
-        /// <code>
-        /// this.Childs[0]
-        ///         .Childs[0]: Version
-        ///         .Childs[1]: Serial Number
-        ///         .Childs[2]: Signature Algorithm
-        ///         .Childs[3]: Issuer
-        ///         .Childs[4]: Validity
-        ///             .Childs[0]:  - Not Before
-        ///             .Childs[1]:  - Not After
-        ///         .Childs[5]: Subject
-        ///         .Childs[6]: Public Key Information
-        ///             .Childs[0]:  - Public Key Algorithm
-        ///             .Childs[1]:  - Public Key
-        /// </code>
-        /// <br/>
-        /// <br/>
-        /// The OID is matched based on the X.509 v3, meaning the OID is expected to has a parent element of type SEQUENCE, which has a parent element of type SET, 
-        /// the value is taken from the second element of the SEQUENCE element.<br/>
+        /// The OID is matched based on the X.509 v3, meaning the OID is expected to have a parent element of type SEQUENCE, which has a parent element of type SET, 
+        /// and the value is taken from the second element of the SEQUENCE element.<br/>
         /// Example of a correct SET element:
         /// <code>
         /// SET
@@ -177,21 +145,11 @@ namespace Asn1DecoderNet5
         }
 
         /// <summary>
-        /// Attempts to find the value for requested OID. Certificate can contain more than one value for requested OID, the values are ordered in the 'items' list as they were found in the structure.
+        /// Attempts to find the value for the requested OID. A certificate can contain more than one value for the requested OID, and the values are ordered in the 'items' list as they were found in the structure.
         /// </summary>
         /// <remarks>
-        /// The Subject element is parsed based on this structure:
-        /// <code>
-        /// this.Childs[0]
-        ///         .Childs[0]: Version
-        ///         .Childs[1]: Subject
-        ///         .Childs[2]: Subject Public Key Information
-        ///         .Childs[3]: Attributes
-        /// </code>
-        /// <br/>
-        /// <br/>
         /// The OID is matched based on the PKCS10 CSR v1.7 specs, meaning the OID is expected to have a parent element of type SEQUENCE, which has a parent element of type SET, 
-        /// the value is taken from the second element of the SEQUENCE element.<br/>
+        /// and the value is taken from the second element of the SEQUENCE element.<br/>
         /// Example of a correct SET element:
         /// <code>
         /// SET
@@ -210,21 +168,11 @@ namespace Asn1DecoderNet5
         }
 
         /// <summary>
-        /// Attempts to find the value for requested OID. Certificate can contain more than one value for requested OID, the values are ordered in the 'items' list as they were found in the structure.
+        /// Attempts to find the value for the requested OID. A certificate can contain more than one value for the requested OID, and the values are ordered in the 'items' list as they were found in the structure.
         /// </summary>
         /// <remarks>
-        /// The Subject element is parsed based on this structure:
-        /// <code>
-        /// this.Childs[0]
-        ///         .Childs[0]: Version
-        ///         .Childs[1]: Subject
-        ///         .Childs[2]: Subject Public Key Information
-        ///         .Childs[3]: Attributes
-        /// </code>
-        /// <br/>
-        /// <br/>
         /// The OID is matched based on the PKCS10 CSR v1.7 specs, meaning the OID is expected to have a parent element of type SEQUENCE, which has a parent element of type SET, 
-        /// the value is taken from the second element of the SEQUENCE element.<br/>
+        /// and the value is taken from the second element of the SEQUENCE element.<br/>
         /// Example of a correct SET element:
         /// <code>
         /// SET
@@ -254,12 +202,12 @@ namespace Asn1DecoderNet5
         }
 
         /// <summary>
-        /// Attempts to find the value for requested OID. Certificate/Request can contain more than one value for requested OID, the values are ordered in the 'items' list as they were found in the structure.
+        /// This method attempts to locate the value for the requested OID. It's important to note that a certificate may contain multiple values for the requested OID, and these values are ordered in the 'items' list as they appear in the structure.
         /// </summary>
         /// <remarks>
-        /// The OID is matched based on the X.509 v3, meaning the OID is expected to has a parent element of type SEQUENCE, which has a parent element of type SET, 
-        /// the value is taken from the second element of the SEQUENCE element.<br/>
-        /// Example of correct SET element:
+        /// The OID is matched based on X.509 v3 standards, which means that the OID is expected to have a parent element of type SEQUENCE, which, in turn, should have a parent element of type SET.
+        /// The value is then extracted from the second element of the SEQUENCE element.<br/>
+        /// Example of a correct SET element:
         /// <code>
         /// SET
         ///  | SEQUENCE
@@ -277,11 +225,11 @@ namespace Asn1DecoderNet5
         }
 
         /// <summary>
-        /// Attempts to find the value for requested OID. Certificate can contain more than one value for requested OID, the values are ordered in the 'items' list as they were found in the structure.
+        /// This method attempts to locate the value for the requested OID. It's important to note that a certificate may contain multiple values for the requested OID, and these values are ordered in the 'items' list as they appear in the structure.
         /// </summary>
         /// <remarks>
-        /// The OID is matched based on the X.509 v3, meaning the OID is expected to has a parent element of type SEQUENCE, which has a parent element of type SET, 
-        /// the value is taken from the second element of the SEQUENCE element.<br/>
+        /// The OID is matched based on X.509 v3 standards, which means that the OID is expected to have a parent element of type SEQUENCE, which, in turn, should have a parent element of type SET.
+        /// The value is then extracted from the second element of the SEQUENCE element.<br/>
         /// Example of a correct SET element:
         /// <code>
         /// SET
@@ -342,12 +290,6 @@ namespace Asn1DecoderNet5
         /// <summary>
         /// Tries to retrieve the certificate's serial number. Returns <see langword="false" /> if the children (Childs property) are structured incorrectly or the appropriate element is missing.
         /// </summary>
-        /// <remarks>
-        /// The serial number tag is expected to be at this position:<br/>
-        /// <code>
-        /// this.Childs[0].Childs[1]
-        /// </code>
-        /// </remarks>
         /// <param name="topLevelTag">Tag returned by <see cref="Decoder.Decode(byte[])"/> method</param>
         /// <param name="serialNumber">The serial number</param>
         /// <returns><see langword="true" /> if the element is found, otherwise <see langword="false" /></returns>
@@ -369,10 +311,10 @@ namespace Asn1DecoderNet5
         }
 
         /// <summary>
-        /// Tries to retrieve the subject alternative name (SAN) and parse the known (and supported) tags from certificate or certificate request.
+        /// Attempts to retrieve the subject alternative name (SAN) and parse the known (and supported) tags from the certificate or certificate request.
         /// </summary>
         /// <remarks>
-        /// To get the actual parsed data the object from result list must be casted accordingly to its kind. <br/><br/>
+        /// To obtain the actual parsed data, you must cast the object from the result list according to its type.<br/><br/>
         /// <list type="table">
         /// <listheader>
         /// <term><see cref="SanItemKind"/></term>
@@ -400,7 +342,7 @@ namespace Asn1DecoderNet5
         /// </item>
         /// <item>
         /// <term><see cref="SanItemKind.EdiPartyName"/></term>
-        /// <description><see cref="EidPartyName"/></description>
+        /// <description><see cref="EdiPartyName"/></description>
         /// </item>
         /// <item>
         /// <term><see cref="SanItemKind.UniformResourceIdentifier"/></term>
@@ -486,7 +428,7 @@ namespace Asn1DecoderNet5
                             san.Add(new DirectoryName(sanItem.Childs[0]));
                             break;
                         case "[5]":
-                            san.Add(new EidPartyName(sanItem.Childs[0]));
+                            san.Add(new EdiPartyName(sanItem.Childs[0]));
                             break;
                         case "[6]":
                             sanItem.ConvertContentToReadableContent();
@@ -508,11 +450,16 @@ namespace Asn1DecoderNet5
         }
 
         /// <summary>
-        /// Attempts to find and parse ExtendedKeyUsage in a certificate tag. If it fails or the EKU is not present in the certificate or is empty, this method returns <see langword="false"/>.
+        /// Attempts to retrieve the Extended Key Usage (EKU) from the specified certificate tag. If the EKU is found,
+        /// the method sets the <paramref name="eku"/> parameter with the relevant information and returns <see langword="true"/>.
+        /// If the EKU is not found, or if the certificate tag is invalid or lacks extensions, it returns <see langword="false"/>.
         /// </summary>
-        /// <param name="topLevelCertificateTag">Certificate tag</param>
-        /// <param name="eku">Result</param>
-        /// <returns><see langword="true" /> if any EKU value was found, otherwise <see langword="false" /></returns>
+        /// <param name="topLevelCertificateTag">The certificate tag to extract Extended Key Usage from.</param>
+        /// <param name="eku">An <see cref="ExtendedKeyUsageTag"/> object containing the EKU information if found.</param>
+        /// <returns>
+        /// <see langword="true"/> if any Extended Key Usage value was found and extracted successfully; 
+        /// otherwise, <see langword="false"/>.
+        /// </returns>
         public static bool TryGetExtendedKeyUsage(this ITag topLevelCertificateTag, out ExtendedKeyUsageTag eku)
         {
             eku = new ExtendedKeyUsageTag();
@@ -551,10 +498,33 @@ namespace Asn1DecoderNet5
             }
         }
 
+#nullable enable
+        public static bool TryGetICACertIntercon(this ITag topLevelCertificateTag, out ICACertIntercon intercon)
+        {
+            intercon = default;
+            if (!IsCertificate(topLevelCertificateTag) || !HasCertExtensions(topLevelCertificateTag))
+                return false;
+            var ext = GetCretificateExtensions(topLevelCertificateTag);
+            foreach (var item in ext)
+            {
+                if (OID.GetOrCreate(item.Childs[0].Content).Value != OID.ICA_CERT_INTERCONNECTION)
+                    continue;
+                var masterReqId = item.Childs[1].Childs[0].Childs[0];
+                masterReqId.ConvertContentToReadableContent();
+                var certCount = item.Childs[1].Childs[0].Childs[1];
+                certCount.ConvertContentToReadableContent();
+                intercon = new ICACertIntercon(item.Childs[1].Childs[0].Childs[2].Content.SequenceEqual(_booleanTrueSequence),
+                                               masterReqId.ReadableContent,
+                                               int.Parse(certCount.ReadableContent));
+                return true;
+            }
+            return false;
+        }
+#nullable restore
         #region Helpers
 
         /// <summary>
-        /// Checks wheter the ASN.1 structure in this tag corresponds to X.509 v3
+        /// Checks whether the ASN.1 structure in this tag corresponds to X.509 v3.
         /// </summary>
         /// <param name="tag"></param>
         /// <returns><see langword="true"/> if the children structure corresponds to X.509 v3, otherwise <see langword="false"/></returns>
@@ -579,7 +549,7 @@ namespace Asn1DecoderNet5
             }
         }
         /// <summary>
-        /// Checks wheter the ASN.1 structure in this tag corresponds to PKCS10 CSR v1.7 specification
+        /// Checks whether the ASN.1 structure in this tag corresponds to PKCS10 CSR v1.7 specification
         /// </summary>
         /// <param name="tag"></param>
         /// <returns><see langword="true"/> if the children structure corresponds to PKCS10 CSR v1.7 specification, otherwise <see langword="false"/></returns>
@@ -601,6 +571,11 @@ namespace Asn1DecoderNet5
             {
                 return false;
             }
+        }
+
+        public static string ToPrettyString(this ITag tag, string elementIndentationRepresentation = " | ", int maxLineLength = 128)
+        {
+            return Decoder.TagToString(tag, elementIndentationRepresentation, maxLineLength);
         }
 
         static bool HasCertExtensions(ITag topLevelCertificateTag)
@@ -659,5 +634,39 @@ namespace Asn1DecoderNet5
         Locality,
         SerialNumber,
         Title,
+    }
+
+    /// <summary>
+    /// Represents an I.CA Certificate Interconnection structure.
+    /// </summary>
+    public readonly record struct ICACertIntercon
+    {
+        /// <summary>
+        /// Creates a new instance of the I.CA Certificate Interconnection
+        /// </summary>
+        /// <param name="isMaster">Specifies if the certificate this structure was parsed from is a master certificate</param>
+        /// <param name="masterRequestId">The master's certificate request ID</param>
+        /// <param name="interconnectedCertificatesCount">The number of certificates that are interconnected</param>
+        public ICACertIntercon(bool isMaster, string masterRequestId, int interconnectedCertificatesCount)
+        {
+            IsMaster = isMaster;
+            MasterRequestId = masterRequestId;
+            InterconnectedCertificatesCount = interconnectedCertificatesCount;
+        }
+
+        /// <summary>
+        /// Indicating whether the certificate is a master certificate
+        /// </summary>
+        public readonly bool IsMaster { get; }
+
+        /// <summary>
+        /// The master's certificate request ID
+        /// </summary>
+        public readonly string MasterRequestId { get; }
+
+        /// <summary>
+        /// The number of certificates that are interconnected
+        /// </summary>
+        public readonly int InterconnectedCertificatesCount { get; }
     }
 }

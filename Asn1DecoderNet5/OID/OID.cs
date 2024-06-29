@@ -24,6 +24,7 @@ namespace Asn1DecoderNet5
         public const string TITLE = "2.5.4.12";
         public const string ICA_USER_ID = "1.3.6.1.4.1.23624.4.6";
         public const string ICA_IK_MPSV = "1.3.6.1.4.1.11801.2.1";
+        public const string ICA_CERT_INTERCONNECTION = "1.3.6.1.4.1.23624.4.7";
         public const string EXTENSION_REQUEST = "1.2.840.113549.1.9.14";
         public const string EXT_KEY_USAGE = "2.5.29.37";
         public const string KEY_USAGE = "2.5.29.15";
@@ -2460,7 +2461,7 @@ namespace Asn1DecoderNet5
 {"1.3.6.1.4.1.23624.10.1.40.1.1",new OID("1.3.6.1.4.1.23624.10.1.40.1.1","I.CA QCWEB PSD2","I.CA SSL EV CA/RSA 10/2017")},
 {"1.3.6.1.4.1.23624.10.1.90.1.1",new OID("1.3.6.1.4.1.23624.10.1.90.1.1","I.CA Qualified Certificates SK for Electronic Signatures","")},
 {"1.3.6.1.4.1.23624.10.1.70.1.1",new OID("1.3.6.1.4.1.23624.10.1.70.1.1","I.CA Commercial Certificates","I.CA Public CA/RSA 07/2015")},
-{"1.3.6.1.4.1.23624.4.7",new OID("1.3.6.1.4.1.23624.4.7","I.CA_CERT_INTERCONNECTION","")},
+{ICA_CERT_INTERCONNECTION,new OID(ICA_CERT_INTERCONNECTION,"I.CA_CERT_INTERCONNECTION","")},
 {"2.6.840.1.113730.1.13",new OID("2.6.840.1.113730.1.13","QSCD identification number","SmartCard Number")}};
     }
 }

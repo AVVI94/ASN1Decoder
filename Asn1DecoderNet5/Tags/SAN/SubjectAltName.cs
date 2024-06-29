@@ -150,12 +150,12 @@ public class DirectoryName : ISanItem
 /// <summary>
 /// EidPartyName SAN Item
 /// </summary>
-public class EidPartyName : ISanItem
+public class EdiPartyName : ISanItem
 {
     // EDIPartyName ::= SEQUENCE {
     //        nameAssigner            [0]     DirectoryString OPTIONAL,
     //        partyName               [1]     DirectoryString }
-    public EidPartyName(ITag content)
+    public EdiPartyName(ITag content)
     {
         if (content.Childs.Count == 2)
         {
