@@ -1,15 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.31624.102
+# Visual Studio Version 17
+VisualStudioVersion = 17.10.35004.147
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Asn1DecoderNet5", "Asn1DecoderNet5\Asn1DecoderNet5.csproj", "{FD29AE8F-BD5E-4BA3-AA74-E18C1C57DF64}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ASN1Decoder.NET", "Asn1DecoderNet5\ASN1Decoder.NET.csproj", "{FD29AE8F-BD5E-4BA3-AA74-E18C1C57DF64}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Asn1Decoder.ConsoleDecoder", "Asn1Decoder.ConsoleDecoder\Asn1Decoder.ConsoleDecoder.csproj", "{31FF178C-46F7-4CFF-9A06-B29FB694509A}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Asn1DecoderNet5.UnitTests", "Asn1DecoderNet5.UnitTests\Asn1DecoderNet5.UnitTests.csproj", "{4083898E-3600-4DCC-BAC2-C1BAFA5890D0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Asn1DecoderNet5.Benchmark", "Asn1DecoderNet5.Benchmark\Asn1DecoderNet5.Benchmark.csproj", "{D46EB9D3-0D9A-4429-9DED-C4527E1B0EC6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Asn1DecoderNet5.Benchmark", "Asn1DecoderNet5.Benchmark\Asn1DecoderNet5.Benchmark.csproj", "{D46EB9D3-0D9A-4429-9DED-C4527E1B0EC6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

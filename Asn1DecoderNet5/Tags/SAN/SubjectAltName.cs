@@ -3,9 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Asn1DecoderNet5.Interfaces;
 
-namespace Asn1DecoderNet5.Tags.SAN;
+namespace ASN1Decoder.NET.Tags.SAN;
 
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 #nullable enable
@@ -55,9 +54,9 @@ public abstract class OtherNameBase<T> : OtherNameBase
 /// <summary>
 /// OtherName SAN Item
 /// </summary>
-public class OtherName : OtherNameBase<ITag>
+public class OtherName : OtherNameBase<IReadOnlyTag>
 {
-    public OtherName(OID oid, ITag content)
+    public OtherName(OID oid, IReadOnlyTag content)
     {
         Oid = oid;
         Content = content;
@@ -66,21 +65,21 @@ public class OtherName : OtherNameBase<ITag>
 
 public class IcaUserId : OtherNameBase<string>
 {
-    public IcaUserId(ITag content)
+    public IcaUserId(IReadOnlyTag content)
     {
         Oid = OID.GetOrCreate(OID.ICA_USER_ID);
-        content.Childs[0].ConvertContentToReadableContent();
-        Content = content.Childs[0].ReadableContent;
+        content.Children[0].ConvertContentToReadableContent();
+        Content = content.Children[0].ReadableContent;
     }
 }
 
 public class IcaIkMpsv : OtherNameBase<string>
 {
-    public IcaIkMpsv(ITag content)
+    public IcaIkMpsv(IReadOnlyTag content)
     {
         Oid = OID.GetOrCreate(OID.ICA_IK_MPSV);
-        content.Childs[0].ConvertContentToReadableContent();
-        Content = content.Childs[0].ReadableContent;
+        content.Children[0].ConvertContentToReadableContent();
+        Content = content.Children[0].ReadableContent;
     }
 }
 
@@ -114,15 +113,15 @@ public class DnsName : ISanItem
 /// </summary>
 public class X400Address : ISanItem
 {
-    public X400Address(ITag content)
+    public X400Address(IReadOnlyTag content)
     {
         Content = content;
     }
     public SanItemKind ItemKind => SanItemKind.X400Address;
     /// <summary>
-    /// X400Address is unsupported, the content is not parsed and is provided as ITag so you can parse it yourself
+    /// X400Address is unsupported, the content is not parsed and is provided as IReadOnlyTag so you can parse it yourself
     /// </summary>
-    public ITag Content { get; }
+    public IReadOnlyTag Content { get; }
 }
 
 /// <summary>
@@ -130,16 +129,16 @@ public class X400Address : ISanItem
 /// </summary>
 public class DirectoryName : ISanItem
 {
-    public DirectoryName(ITag content)
+    public DirectoryName(IReadOnlyTag content)
     {
         Content = new List<RelativeDistinguishedName>();
-        foreach (var set in content.Childs)
+        foreach (var set in content.Children)
         {
-            if (string.IsNullOrEmpty(set.Childs[0].Childs[1].ReadableContent))
-                set.Childs[0].Childs[1].ConvertContentToReadableContent();
+            if (string.IsNullOrEmpty(set.Children[0].Children[1].ReadableContent))
+                set.Children[0].Children[1].ConvertContentToReadableContent();
             Content.Add(new RelativeDistinguishedName(
-             OID.GetOrCreate(set.Childs[0].Childs[0].Content),
-             set.Childs[0].Childs[1].ReadableContent
+             OID.GetOrCreate(set.Children[0].Children[0].Content),
+             set.Children[0].Children[1].ReadableContent
              ));
         }
     }
@@ -155,20 +154,20 @@ public class EdiPartyName : ISanItem
     // EDIPartyName ::= SEQUENCE {
     //        nameAssigner            [0]     DirectoryString OPTIONAL,
     //        partyName               [1]     DirectoryString }
-    public EdiPartyName(ITag content)
+    public EdiPartyName(IReadOnlyTag content)
     {
-        if (content.Childs.Count == 2)
+        if (content.Children.Count == 2)
         {
-            content.Childs[0].ConvertContentToReadableContent();
-            NameAssigner = content.Childs[0].ReadableContent;
+            content.Children[0].ConvertContentToReadableContent();
+            NameAssigner = content.Children[0].ReadableContent;
 
-            content.Childs[1].ConvertContentToReadableContent();
-            PartyName = content.Childs[1].ReadableContent;
+            content.Children[1].ConvertContentToReadableContent();
+            PartyName = content.Children[1].ReadableContent;
         }
         else
         {
-            content.Childs[0].ConvertContentToReadableContent();
-            PartyName = content.Childs[0].ReadableContent;
+            content.Children[0].ConvertContentToReadableContent();
+            PartyName = content.Children[0].ReadableContent;
         }
     }
     public SanItemKind ItemKind => SanItemKind.EdiPartyName;

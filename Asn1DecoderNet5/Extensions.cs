@@ -1,23 +1,23 @@
-﻿using System;
+﻿using ASN1Decoder.NET.OIDEncoding;
+using ASN1Decoder.NET.Tags;
+using ASN1Decoder.NET.Tags.SAN;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using Asn1DecoderNet5.Interfaces;
-using Asn1DecoderNet5.Tags;
-using Asn1DecoderNet5.Tags.SAN;
 
-namespace Asn1DecoderNet5
+namespace ASN1Decoder.NET
 {
     public static class Extensions
     {
-        static readonly byte[] _version0Sequence = new byte[] { 0x00 };
-        static readonly byte[] _version2Sequence = new byte[] { 0x02 };
-        static readonly byte[] _booleanTrueSequence = new byte[] { 0xFF };
-        static readonly byte[] _keyUsageOidSequence = OID.GetOrCreate(OID.KEY_USAGE).ByteValue;
-        static readonly byte[] _sanOidSequence = OID.GetOrCreate(OID.SUBJECT_ALT_NAME).ByteValue;
-        static readonly byte[] _icaUserIdSequence = OID.GetOrCreate(OID.ICA_USER_ID).ByteValue;
-        static readonly byte[] _icaIkMpsvSequence = OID.GetOrCreate(OID.ICA_IK_MPSV).ByteValue;
-        static readonly byte[] _extensionRequestSequence = OID.GetOrCreate(OID.EXTENSION_REQUEST).ByteValue;
-        static readonly byte[] _extKeyUsageSequence = OID.GetOrCreate(OID.EXT_KEY_USAGE).ByteValue;
+        internal static readonly byte[] _version0Sequence = new byte[] { 0x00 };
+        internal static readonly byte[] _version2Sequence = new byte[] { 0x02 };
+        internal static readonly byte[] _booleanTrueSequence = new byte[] { 0xFF };
+        internal static readonly byte[] _keyUsageOidSequence = OID.GetOrCreate(OID.KEY_USAGE).ByteValue;
+        internal static readonly byte[] _sanOidSequence = OID.GetOrCreate(OID.SUBJECT_ALT_NAME).ByteValue;
+        internal static readonly byte[] _icaUserIdSequence = OID.GetOrCreate(OID.ICA_USER_ID).ByteValue;
+        internal static readonly byte[] _icaIkMpsvSequence = OID.GetOrCreate(OID.ICA_IK_MPSV).ByteValue;
+        internal static readonly byte[] _extensionRequestSequence = OID.GetOrCreate(OID.EXTENSION_REQUEST).ByteValue;
+        internal static readonly byte[] _extKeyUsageSequence = OID.GetOrCreate(OID.EXT_KEY_USAGE).ByteValue;
 
         public static string ToOidString(this SubjectItemKind subjectItem)
         {
@@ -28,11 +28,14 @@ namespace Asn1DecoderNet5
                 SubjectItemKind.Surname => OID.SURNAME,
                 SubjectItemKind.CountryName => OID.COUNTRY_NAME,
                 SubjectItemKind.OrganizationName => OID.ORGANIZATION_NAME,
-                SubjectItemKind.OrganizationUnit => OID.ORGANIZATION_UNIT,
+                SubjectItemKind.OrganizationUnitName => OID.ORGANIZATION_UNIT,
                 SubjectItemKind.StateOrProvinceName => OID.STATE_OR_PROVINCE_NAME,
-                SubjectItemKind.Locality => OID.LOCALITY,
+                SubjectItemKind.LocalityName => OID.LOCALITY,
                 SubjectItemKind.SerialNumber => OID.SERIAL_NUMBER,
                 SubjectItemKind.Title => OID.TITLE,
+                SubjectItemKind.OrganizationIdentifier => OID.ORGANIZATION_IDENTIFIER,
+                SubjectItemKind.StreetAddress => OID.STREET_ADDRESS,
+                SubjectItemKind.PostalCode => OID.POSTAL_CODE,
                 _ => null//throw new ArgumentException($"Parameter '{nameof(subjectItem)}' has invalid value!", nameof(subjectItem)),
             };
         }
@@ -46,14 +49,14 @@ namespace Asn1DecoderNet5
         /// <param name="tag">Represents the element in which its children will be searched and parsed</param>
         /// <param name="keyUsage">The value</param>
         /// <returns><see langword="true" /> if KeyUsage was found, otherwise <see langword="false" /></returns>
-        public static bool TryGetKeyUsage(this ITag tag, out KeyUsage keyUsage)
+        public static bool TryGetKeyUsage(this IReadOnlyTag tag, out KeyUsage keyUsage)
         {
             keyUsage = default;
             try
             {
                 //if the tag is cert, the KeyUsage location is somewhere in cert's extensions
                 if (IsCertificate(tag))
-                    tag = tag.Childs[0].Childs[tag.Childs[0].Childs.Count - 1].Childs[0];
+                    tag = tag.Children[0].Children[tag.Children[0].Children.Count - 1].Children[0];
                 return FindKeyUsage(tag, ref keyUsage);
             }
             catch
@@ -61,7 +64,7 @@ namespace Asn1DecoderNet5
                 return false;
             }
 
-            static bool FindKeyUsage(ITag tag, ref KeyUsage keyUsage)
+            static bool FindKeyUsage(IReadOnlyTag tag, ref KeyUsage keyUsage)
             {
                 if (tag is KeyUsageTag { KeyUsage.KeyUsages: not null } kut)
                 {
@@ -74,7 +77,7 @@ namespace Asn1DecoderNet5
                     return true;
                 }
 
-                foreach (var t in tag.Childs)
+                foreach (var t in tag.Children)
                 {
                     if (FindKeyUsage(t, ref keyUsage))
                         return true;
@@ -103,7 +106,7 @@ namespace Asn1DecoderNet5
         /// <param name="forIssuer">Indicates, whether to find the value for requested OID in the Issuer element or in the Subject element</param>
         /// <param name="items">The value</param>
         /// <returns><see langword="true" /> if any value was found, otherwise <see langword="false" /></returns>
-        public static bool TryGetCertificateSubjectItem(this ITag topLevelTag, SubjectItemKind subjectItem, bool forIssuer, out List<string> items)
+        public static bool TryGetCertificateSubjectItem(this IReadOnlyTag topLevelTag, SubjectItemKind subjectItem, bool forIssuer, out List<string> items)
         {
             return TryGetCertificateSubjectItem(topLevelTag, subjectItem.ToOidString(), forIssuer, out items);
         }
@@ -128,7 +131,7 @@ namespace Asn1DecoderNet5
         /// <param name="forIssuer">Indicates, whether to find the value for requested OID in the Issuer element or in the Subject element</param>
         /// <param name="items">The value</param>
         /// <returns><see langword="true" /> if any value was found, otherwise <see langword="false" /></returns>
-        public static bool TryGetCertificateSubjectItem(this ITag topLevelTag, string oid, bool forIssuer, out List<string> items)
+        public static bool TryGetCertificateSubjectItem(this IReadOnlyTag topLevelTag, string oid, bool forIssuer, out List<string> items)
         {
             items = new List<string>();
             if (IsOidNullOrEmpty(oid) || !IsCertificate(topLevelTag))
@@ -136,11 +139,11 @@ namespace Asn1DecoderNet5
 
             if (forIssuer)
             {
-                return TryGetSubjectItem(topLevelTag.Childs[0].Childs[3], OIDEncoding.OidEncoding.GetBytes(oid), out items);
+                return TryGetSubjectItem(topLevelTag.Children[0].Children[3], OidEncoding.GetBytes(oid), out items);
             }
             else
             {
-                return TryGetSubjectItem(topLevelTag.Childs[0].Childs[5], OIDEncoding.OidEncoding.GetBytes(oid), out items);
+                return TryGetSubjectItem(topLevelTag.Children[0].Children[5], OidEncoding.GetBytes(oid), out items);
             }
         }
 
@@ -162,7 +165,7 @@ namespace Asn1DecoderNet5
         /// <param name="subjectItem">Requested item</param>
         /// <param name="items">The value</param>
         /// <returns><see langword="true" /> if any value was found, otherwise <see langword="false" /></returns>
-        public static bool TryGetCertificateRequestSubjectItem(this ITag topLevelTag, SubjectItemKind subjectItem, out List<string> items)
+        public static bool TryGetCertificateRequestSubjectItem(this IReadOnlyTag topLevelTag, SubjectItemKind subjectItem, out List<string> items)
         {
             return TryGetCertificateRequestSubjectItem(topLevelTag, subjectItem.ToOidString(), out items);
         }
@@ -185,15 +188,15 @@ namespace Asn1DecoderNet5
         /// <param name="oid">Requested OID</param>
         /// <param name="items">The value</param>
         /// <returns><see langword="true" /> if any value was found, otherwise <see langword="false" /></returns>
-        public static bool TryGetCertificateRequestSubjectItem(this ITag topLevelTag, string oid, out List<string> items)
+        public static bool TryGetCertificateRequestSubjectItem(this IReadOnlyTag topLevelTag, string oid, out List<string> items)
         {
             items = new List<string>();
             try
             {
                 if (IsOidNullOrEmpty(oid) || !IsCertificateRequest(topLevelTag))
                     return false;
-                topLevelTag = topLevelTag.Childs[0].Childs[1];
-                return TryGetSubjectItem(topLevelTag, OIDEncoding.OidEncoding.GetBytes(oid), out items);
+                topLevelTag = topLevelTag.Children[0].Children[1];
+                return TryGetSubjectItem(topLevelTag, OidEncoding.GetBytes(oid), out items);
             }
             catch
             {
@@ -219,9 +222,9 @@ namespace Asn1DecoderNet5
         /// <param name="kind">Subject item kind</param>
         /// <param name="items">The value</param>
         /// <returns><see langword="true" /> if any value was found, otherwise <see langword="false" /></returns>
-        public static bool TryGetSubjectItem(this ITag tag, SubjectItemKind kind, out List<string> items)
+        public static bool TryGetSubjectItem(this IReadOnlyTag tag, SubjectItemKind kind, out List<string> items)
         {
-            return TryGetSubjectItem(tag, OIDEncoding.OidEncoding.GetBytes(kind.ToOidString()), out items);
+            return TryGetSubjectItem(tag, OidEncoding.GetBytes(kind.ToOidString()), out items);
         }
 
         /// <summary>
@@ -239,10 +242,10 @@ namespace Asn1DecoderNet5
         /// </code>
         /// </remarks>
         /// <param name="tag">Parent tag</param>
-        /// <param name="oid">Requested OID in byte array representation. <see cref="Asn1DecoderNet5.OIDEncoding.OidEncoding"/> can be used to convert it from a string representation.</param>
+        /// <param name="oid">Requested OID in byte array representation. <see cref="ASN1Decoder.NET.OIDEncoding.OidEncoding"/> can be used to convert it from a string representation.</param>
         /// <param name="items">The value</param>
         /// <returns><see langword="true" /> if any value was found, otherwise <see langword="false" /></returns>
-        public static bool TryGetSubjectItem(this ITag tag, byte[] oid, out List<string> items)
+        public static bool TryGetSubjectItem(this IReadOnlyTag tag, byte[] oid, out List<string> items)
         {
             items = new List<string>();
             if (IsOidNullOrEmpty(oid))
@@ -253,7 +256,7 @@ namespace Asn1DecoderNet5
               |  | OBJECT_IDENTIFIER 2.5.4.3, commonName, X.520 DN component
               |  | UTF8String common name value
              */
-            if (tag.Childs.Count == 0)
+            if (tag.Children.Count == 0)
                 return false;
             try
             {
@@ -261,10 +264,10 @@ namespace Asn1DecoderNet5
                 {
                     items.Add(GetValue(tag));
                 }
-                foreach (var t in tag.Childs)
+                foreach (var t in tag.Children)
                 {
                     bool isSet = IsSET(t);
-                    if (!isSet && t.Childs.Count > 0 && TryGetSubjectItem(t, oid, out var items2))
+                    if (!isSet && t.Children.Count > 0 && TryGetSubjectItem(t, oid, out var items2))
                     {
                         items.AddRange(items2);
                         continue;
@@ -282,9 +285,9 @@ namespace Asn1DecoderNet5
             }
             static bool IsValidSet(ITag t, byte[] oid)
                 => IsSET(t)
-                   && t.Childs.Count == 1
-                   && t.Childs[0].TagNumber == (int)Tags.Tags.SEQUENCE
-                   && t.Childs[0].Childs[0].Content.SequenceEqual(oid);
+                   && t.Children.Count == 1
+                   && t.Children[0].TagNumber == (int)Tags.TagNames.SEQUENCE
+                   && t.Children[0].Children[0].Content.SequenceEqual(oid);
         }
 
         /// <summary>
@@ -293,7 +296,7 @@ namespace Asn1DecoderNet5
         /// <param name="topLevelTag">Tag returned by <see cref="Decoder.Decode(byte[])"/> method</param>
         /// <param name="serialNumber">The serial number</param>
         /// <returns><see langword="true" /> if the element is found, otherwise <see langword="false" /></returns>
-        public static bool TryCertificateGetSerialNumber(this ITag topLevelTag, out string serialNumber)
+        public static bool TryCertificateGetSerialNumber(this IReadOnlyTag topLevelTag, out string serialNumber)
         {
             serialNumber = null;
             try
@@ -301,7 +304,7 @@ namespace Asn1DecoderNet5
 
                 if (!IsCertificate(topLevelTag))
                     return false;
-                serialNumber = GetValue(topLevelTag.Childs[0].Childs[1]);
+                serialNumber = GetValue(topLevelTag.Children[0].Children[1]);
                 return serialNumber is not null;
             }
             catch
@@ -361,7 +364,7 @@ namespace Asn1DecoderNet5
         /// <param name="topLevelTag">Top level source tag</param>
         /// <param name="san">Result</param>
         /// <returns><see langword="true" /> if SAN was found, otherwise <see langword="false" /></returns>
-        public static bool TryGetSubjectAlternativeName(this ITag topLevelTag, out List<ISanItem> san)
+        public static bool TryGetSubjectAlternativeName(this IReadOnlyTag topLevelTag, out List<ISanItem> san)
         {
             san = new();
             try
@@ -372,7 +375,7 @@ namespace Asn1DecoderNet5
                         return false;
                     foreach (var item in GetCretificateExtensions(topLevelTag))
                     {
-                        if (!item.Childs[0].Content.SequenceEqual(_sanOidSequence))
+                        if (!item.Children[0].Content.SequenceEqual(_sanOidSequence))
                             continue;
                         ParseSan(san, item);
                         break;
@@ -384,7 +387,7 @@ namespace Asn1DecoderNet5
                         return false;
                     foreach (var item in GetRequestedExtensions(topLevelTag))
                     {
-                        if (!item.Childs[0].Content.SequenceEqual(_sanOidSequence))
+                        if (!item.Children[0].Content.SequenceEqual(_sanOidSequence))
                             continue;
                         ParseSan(san, item);
                         break;
@@ -398,19 +401,19 @@ namespace Asn1DecoderNet5
                 return false;
             }
 
-            static void ParseSan(List<ISanItem> san, ITag item)
+            static void ParseSan(List<ISanItem> san, IReadOnlyTag item)
             {
-                foreach (var sanItem in item.Childs[1].Childs[0].Childs)
+                foreach (var sanItem in item.Children[1].Children[0].Children)
                 {
                     switch (sanItem.TagName)
                     {
                         case "[0]":
-                            if (sanItem.Childs[0].Content.SequenceEqual(_icaUserIdSequence))
-                                san.Add(new IcaUserId(sanItem.Childs[1]));
-                            else if (sanItem.Childs[0].Content.SequenceEqual(_icaIkMpsvSequence))
-                                san.Add(new IcaIkMpsv(sanItem.Childs[1]));
+                            if (sanItem.Children[0].Content.SequenceEqual(_icaUserIdSequence))
+                                san.Add(new IcaUserId(sanItem.Children[1]));
+                            else if (sanItem.Children[0].Content.SequenceEqual(_icaIkMpsvSequence))
+                                san.Add(new IcaIkMpsv(sanItem.Children[1]));
                             else
-                                san.Add(new OtherName(OID.GetOrCreate(sanItem.Childs[0].Content), sanItem.Childs[1].Childs[0]));
+                                san.Add(new OtherName(OID.GetOrCreate(sanItem.Children[0].Content), sanItem.Children[1].Children[0]));
                             break;
                         case "[1]":
                             sanItem.ConvertContentToReadableContent();
@@ -421,14 +424,14 @@ namespace Asn1DecoderNet5
                             san.Add(new DnsName(sanItem.ReadableContent));
                             break;
                         case "[3]":
-                            sanItem.Childs[0].ConvertContentToReadableContent();
-                            san.Add(new X400Address(sanItem.Childs[0]));
+                            sanItem.Children[0].ConvertContentToReadableContent();
+                            san.Add(new X400Address(sanItem.Children[0]));
                             break;
                         case "[4]":
-                            san.Add(new DirectoryName(sanItem.Childs[0]));
+                            san.Add(new DirectoryName(sanItem.Children[0]));
                             break;
                         case "[5]":
-                            san.Add(new EdiPartyName(sanItem.Childs[0]));
+                            san.Add(new EdiPartyName(sanItem.Children[0]));
                             break;
                         case "[6]":
                             sanItem.ConvertContentToReadableContent();
@@ -439,8 +442,8 @@ namespace Asn1DecoderNet5
                             san.Add(new IPAddress(sanItem.ReadableContent));
                             break;
                         case "[8]":
-                            sanItem.Childs[0].ConvertContentToReadableContent();
-                            san.Add(new RegisteredID(OID.GetOrCreate(sanItem.Childs[0].Content)));
+                            sanItem.Children[0].ConvertContentToReadableContent();
+                            san.Add(new RegisteredID(OID.GetOrCreate(sanItem.Children[0].Content)));
                             break;
                         default:
                             break;
@@ -455,14 +458,14 @@ namespace Asn1DecoderNet5
         /// If the EKU is not found, or if the certificate tag is invalid or lacks extensions, it returns <see langword="false"/>.
         /// </summary>
         /// <param name="topLevelCertificateTag">The certificate tag to extract Extended Key Usage from.</param>
-        /// <param name="eku">An <see cref="ExtendedKeyUsageTag"/> object containing the EKU information if found.</param>
+        /// <param name="eku">An <see cref="ExtendedKeyUsage"/> object containing the EKU information if found.</param>
         /// <returns>
         /// <see langword="true"/> if any Extended Key Usage value was found and extracted successfully; 
         /// otherwise, <see langword="false"/>.
         /// </returns>
-        public static bool TryGetExtendedKeyUsage(this ITag topLevelCertificateTag, out ExtendedKeyUsageTag eku)
+        public static bool TryGetExtendedKeyUsage(this IReadOnlyTag topLevelCertificateTag, out ExtendedKeyUsage eku)
         {
-            eku = new ExtendedKeyUsageTag();
+            eku = new ExtendedKeyUsage();
             try
             {
                 if (!IsCertificate(topLevelCertificateTag) || !HasCertExtensions(topLevelCertificateTag))
@@ -470,9 +473,9 @@ namespace Asn1DecoderNet5
                 bool ekuFound = false;
                 foreach (var ext in GetCretificateExtensions(topLevelCertificateTag))
                 {
-                    if (!ext.Childs[0].Content.SequenceEqual(_extKeyUsageSequence))
+                    if (!ext.Children[0].Content.SequenceEqual(_extKeyUsageSequence))
                         continue;
-                    foreach (var e in ext.Childs[1].Childs[0].Childs)
+                    foreach (var e in ext.Children[1].Children[0].Children)
                     {
                         switch (OID.GetOrCreate(e.Content).Value)
                         {
@@ -499,7 +502,7 @@ namespace Asn1DecoderNet5
         }
 
 #nullable enable
-        public static bool TryGetICACertIntercon(this ITag topLevelCertificateTag, out ICACertIntercon intercon)
+        public static bool TryGetICACertIntercon(this IReadOnlyTag topLevelCertificateTag, out ICACertIntercon intercon)
         {
             intercon = default;
             if (!IsCertificate(topLevelCertificateTag) || !HasCertExtensions(topLevelCertificateTag))
@@ -507,13 +510,13 @@ namespace Asn1DecoderNet5
             var ext = GetCretificateExtensions(topLevelCertificateTag);
             foreach (var item in ext)
             {
-                if (OID.GetOrCreate(item.Childs[0].Content).Value != OID.ICA_CERT_INTERCONNECTION)
+                if (OID.GetOrCreate(item.Children[0].Content).Value != OID.ICA_CERT_INTERCONNECTION)
                     continue;
-                var masterReqId = item.Childs[1].Childs[0].Childs[0];
+                var masterReqId = item.Children[1].Children[0].Children[0];
                 masterReqId.ConvertContentToReadableContent();
-                var certCount = item.Childs[1].Childs[0].Childs[1];
+                var certCount = item.Children[1].Children[0].Children[1];
                 certCount.ConvertContentToReadableContent();
-                intercon = new ICACertIntercon(item.Childs[1].Childs[0].Childs[2].Content.SequenceEqual(_booleanTrueSequence),
+                intercon = new ICACertIntercon(item.Children[1].Children[0].Children[2].Content.SequenceEqual(_booleanTrueSequence),
                                                masterReqId.ReadableContent,
                                                int.Parse(certCount.ReadableContent));
                 return true;
@@ -528,20 +531,20 @@ namespace Asn1DecoderNet5
         /// </summary>
         /// <param name="tag"></param>
         /// <returns><see langword="true"/> if the children structure corresponds to X.509 v3, otherwise <see langword="false"/></returns>
-        public static bool IsCertificate(this ITag tag)
+        public static bool IsCertificate(this IReadOnlyTag tag)
         {
             try
             {
-                return tag.Childs.Count == 3
-                           && tag.Childs[0].Childs.Count != 0
-                           && tag.Childs[0].Childs[0].TagClass == 2
-                           && tag.Childs[0].Childs[0].Childs[0].TagNumber == (int)Tags.Tags.INTEGER
-                           && tag.Childs[0].Childs[0].Childs[0].Content.SequenceEqual(_version2Sequence)
-                           && tag.Childs[1].TagNumber == (int)Tags.Tags.SEQUENCE
-                           && (tag.Childs[1].Childs.Count == 1 || tag.Childs[1].Childs.Count == 2)
-                           && tag.Childs[1].Childs[0].TagNumber == (int)Tags.Tags.OBJECT_IDENTIFIER
-                           && tag.Childs[2].Childs.Count == 0
-                           && tag.Childs[2].TagNumber == (int)Tags.Tags.BIT_STRING;
+                return tag.Children.Count == 3
+                           && tag.Children[0].Children.Count != 0
+                           && tag.Children[0].Children[0].TagClass == 2
+                           && tag.Children[0].Children[0].Children[0].TagNumber == (int)Tags.TagNames.INTEGER
+                           && tag.Children[0].Children[0].Children[0].Content.SequenceEqual(_version2Sequence)
+                           && tag.Children[1].TagNumber == (int)Tags.TagNames.SEQUENCE
+                           && (tag.Children[1].Children.Count == 1 || tag.Children[1].Children.Count == 2)
+                           && tag.Children[1].Children[0].TagNumber == (int)Tags.TagNames.OBJECT_IDENTIFIER
+                           && tag.Children[2].Children.Count == 0
+                           && tag.Children[2].TagNumber == (int)Tags.TagNames.BIT_STRING;
             }
             catch
             {
@@ -553,19 +556,19 @@ namespace Asn1DecoderNet5
         /// </summary>
         /// <param name="tag"></param>
         /// <returns><see langword="true"/> if the children structure corresponds to PKCS10 CSR v1.7 specification, otherwise <see langword="false"/></returns>
-        public static bool IsCertificateRequest(this ITag tag)
+        public static bool IsCertificateRequest(this IReadOnlyTag tag)
         {
             try
             {
-                return tag.Childs.Count == 3
-                   && tag.Childs[0].Childs.Count != 0
-                   && tag.Childs[0].Childs[0].TagNumber == (int)Tags.Tags.INTEGER
-                   && tag.Childs[0].Childs[0].Content.SequenceEqual(_version0Sequence)
-                   && tag.Childs[1].TagNumber == (int)Tags.Tags.SEQUENCE
-                   && (tag.Childs[1].Childs.Count == 1 || tag.Childs[1].Childs.Count == 2)
-                   && tag.Childs[1].Childs[0].TagNumber == (int)Tags.Tags.OBJECT_IDENTIFIER
-                   && tag.Childs[2].Childs.Count == 0
-                   && tag.Childs[2].TagNumber == (int)Tags.Tags.BIT_STRING;
+                return tag.Children.Count == 3
+                   && tag.Children[0].Children.Count != 0
+                   && tag.Children[0].Children[0].TagNumber == (int)Tags.TagNames.INTEGER
+                   && tag.Children[0].Children[0].Content.SequenceEqual(_version0Sequence)
+                   && tag.Children[1].TagNumber == (int)Tags.TagNames.SEQUENCE
+                   && (tag.Children[1].Children.Count == 1 || tag.Children[1].Children.Count == 2)
+                   && tag.Children[1].Children[0].TagNumber == (int)Tags.TagNames.OBJECT_IDENTIFIER
+                   && tag.Children[2].Children.Count == 0
+                   && tag.Children[2].TagNumber == (int)Tags.TagNames.BIT_STRING;
             }
             catch
             {
@@ -573,27 +576,27 @@ namespace Asn1DecoderNet5
             }
         }
 
-        public static string ToPrettyString(this ITag tag, string elementIndentationRepresentation = " | ", int maxLineLength = 128)
+        public static string ToPrettyString(this IReadOnlyTag tag, string elementIndentationRepresentation = " | ", int maxLineLength = 128)
         {
             return Decoder.TagToString(tag, elementIndentationRepresentation, maxLineLength);
         }
 
-        static bool HasCertExtensions(ITag topLevelCertificateTag)
+        static bool HasCertExtensions(IReadOnlyTag topLevelCertificateTag)
         {
-            return topLevelCertificateTag.Childs[0].Childs[topLevelCertificateTag.Childs[0].Childs.Count - 1].TagName == "[3]";
+            return topLevelCertificateTag.Children[0].Children[topLevelCertificateTag.Children[0].Children.Count - 1].TagName == "[3]";
         }
-        static bool HasRequestedExtensions(ITag topLevelCertRequestTag)
+        static bool HasRequestedExtensions(IReadOnlyTag topLevelCertRequestTag)
         {
-            return topLevelCertRequestTag.Childs[0].Childs[topLevelCertRequestTag.Childs[0].Childs.Count - 1].TagName == "[0]"
-                    && topLevelCertRequestTag.Childs[0].Childs[topLevelCertRequestTag.Childs[0].Childs.Count - 1]
-                                  .Childs[0].Childs[0].Content.SequenceEqual(_extensionRequestSequence);
+            return topLevelCertRequestTag.Children[0].Children[topLevelCertRequestTag.Children[0].Children.Count - 1].TagName == "[0]"
+                    && topLevelCertRequestTag.Children[0].Children[topLevelCertRequestTag.Children[0].Children.Count - 1]
+                                  .Children[0].Children[0].Content.SequenceEqual(_extensionRequestSequence);
         }
-        static bool IsSET(ITag t) => t.TagNumber == (int)Tags.Tags.SET;
-        static string GetValue(ITag t)
+        static bool IsSET(ITag t) => t.TagNumber == (int)TagNames.SET;
+        static string GetValue(IReadOnlyTag t)
         {
-            if (t.Childs[0].Childs[1].ReadableContent is null)
-                t.Childs[0].Childs[1].ConvertContentToReadableContent();
-            return t.Childs[0].Childs[1].ReadableContent;
+            if (t.Children[0].Children[1].ReadableContent is null)
+                t.Children[0].Children[1].ConvertContentToReadableContent();
+            return t.Children[0].Children[1].ReadableContent;
         }
         static bool IsOidNullOrEmpty(string oid)
         {
@@ -604,20 +607,20 @@ namespace Asn1DecoderNet5
             return oid is null or { Length: 0 };
 
         }
-        static List<ITag> GetCretificateExtensions(ITag topLevelTag)
+        static IReadOnlyList<IReadOnlyTag> GetCretificateExtensions(IReadOnlyTag topLevelTag)
         {
-            return topLevelTag.Childs[0].Childs[topLevelTag.Childs[0].Childs.Count - 1].Childs[0].Childs;
+            return topLevelTag.Children[0].Children[topLevelTag.Children[0].Children.Count - 1].Children[0].Children;
         }
-        static List<ITag> GetRequestedExtensions(ITag topLevelTag)
+        static IReadOnlyList<IReadOnlyTag> GetRequestedExtensions(IReadOnlyTag topLevelTag)
         {
-            return topLevelTag.Childs[0].Childs[topLevelTag.Childs[0].Childs.Count - 1].Childs[0].Childs[1].Childs[0].Childs;
+            return topLevelTag.Children[0].Children[topLevelTag.Children[0].Children.Count - 1].Children[0].Children[1].Children[0].Children;
         }
-        internal static bool IsKeyUsageSequence(this ITag tag)
-            => tag.Childs.Count == 3 && tag.Childs[0] is { TagNumber: (int)Tags.Tags.OBJECT_IDENTIFIER } oidTag && oidTag.Content.SequenceEqual(_keyUsageOidSequence);
-        internal static bool IsKeyUsageCritical(this ITag tag)
-            => tag.IsKeyUsageSequence() && tag.Childs[1] is { TagNumber: (int)Tags.Tags.BOOLEAN } boolTag && boolTag.Content.SequenceEqual(_booleanTrueSequence);
-        internal static ITag GetKeyUsageBitStringTag(this ITag tag)
-            => tag.Childs[2].Childs[0];
+        internal static bool IsKeyUsageSequence(this IReadOnlyTag tag)
+            => tag.Children.Count == 3 && tag.Children[0] is { TagNumber: (int)Tags.TagNames.OBJECT_IDENTIFIER } oidTag && oidTag.Content.SequenceEqual(_keyUsageOidSequence);
+        internal static bool IsKeyUsageCritical(this IReadOnlyTag tag)
+            => tag.IsKeyUsageSequence() && tag.Children[1] is { TagNumber: (int)Tags.TagNames.BOOLEAN } boolTag && boolTag.Content.SequenceEqual(_booleanTrueSequence);
+        internal static IReadOnlyTag GetKeyUsageBitStringTag(this IReadOnlyTag tag)
+            => tag.Children[2].Children[0];
 
         #endregion
     }
@@ -629,9 +632,12 @@ namespace Asn1DecoderNet5
         Surname,
         CountryName,
         OrganizationName,
-        OrganizationUnit,
+        OrganizationUnitName,
+        OrganizationIdentifier,
         StateOrProvinceName,
-        Locality,
+        LocalityName,
+        StreetAddress,
+        PostalCode,
         SerialNumber,
         Title,
     }

@@ -4,12 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Asn1DecoderNet5.Tags
+namespace ASN1Decoder.NET.Tags
 {
     /// <summary>
     /// Decoded tags in decimal format
     /// </summary>
-    public enum Tags
+    public enum TagNames
     {
         //EOC = 0,
         BOOLEAN = 1,

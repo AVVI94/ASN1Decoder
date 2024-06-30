@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using Asn1DecoderNet5;
+using ASN1Decoder.NET;
 
 namespace Asn1Decoder.ConsoleDecoder
 {

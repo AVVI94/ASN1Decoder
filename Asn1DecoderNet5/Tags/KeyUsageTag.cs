@@ -2,21 +2,20 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Asn1DecoderNet5.Interfaces;
-namespace Asn1DecoderNet5.Tags;
+namespace ASN1Decoder.NET.Tags;
 /// <summary>
 /// Tag representing KeyUsage BIT_STRING tag
 /// </summary>
-public struct KeyUsageTag : ITag
+public struct KeyUsageTag : IReadOnlyTag
 {
     /// <summary>
     /// Tag representing KeyUsage BIT_STRING tag
     /// </summary>
     /// <param name="genericTag">BIT_STRING tag base</param>
     /// <exception cref="ArgumentException">Thrown if the genericTag is not BIT_STRING</exception>
-    public KeyUsageTag(in ITag genericTag, bool critical)
+    public KeyUsageTag(in IReadOnlyTag genericTag, bool critical)
     {
-        if (genericTag.TagNumber != (int)Tags.BIT_STRING)
+        if (genericTag.TagNumber != (int)TagNames.BIT_STRING)
             throw new ArgumentException("KeyUsage tag must be based on BitString tag!");
 
         TagNumber = genericTag.TagNumber;
@@ -25,11 +24,11 @@ public struct KeyUsageTag : ITag
         IsConstructed = genericTag.IsConstructed;
         IsUniversal = genericTag.IsUniversal;
         IsEoc = genericTag.IsEoc;
-        Childs = genericTag.Childs;
+        Children = genericTag.Children;
         Content = genericTag.Content;
         ReadableContent = genericTag.ReadableContent;
 
-        var bits = Tag.ParseBitString(Content).PadRight(8, '0');
+        var bits = SmartTag.ParseBitString(Content).PadRight(8, '0');
         var decipherOnly = bits == "00000000";
         var ks = new bool[8];
         for (int i = 0; i < 8; i++)
@@ -38,23 +37,22 @@ public struct KeyUsageTag : ITag
         }
         KeyUsage = new KeyUsage(ks, critical, decipherOnly);
     }
-    public int TagNumber { get; set; }
-    public string TagName { get; set; }
-    public int TagClass { get; set; }
+    public readonly int TagNumber { get; }
+    public readonly string TagName { get; }
+    public readonly int TagClass { get; }
     public readonly bool IsConstructed { get; }
     public readonly bool IsUniversal { get; }
     public readonly bool IsEoc { get; }
-    public List<ITag> Childs { get; set; }
-    public byte[] Content { get; set; }
-    public string ReadableContent { get; set; }
+    public readonly IReadOnlyList<IReadOnlyTag> Children { get; }
+    public readonly byte[] Content { get; }
+    public string ReadableContent { get; private set; }
 
     public readonly KeyUsage KeyUsage { get; }
-
-    readonly IReadOnlyList<IReadOnlyTag> IReadOnlyTag.Childs => Childs.Cast<IReadOnlyTag>().ToList();
+    readonly IList<ITag> ITag.Children => (IList<ITag>)Children;
 
     public void ConvertContentToReadableContent()
     {
-        ReadableContent = Tag.ParseBitString(Content);
+        ReadableContent = SmartTag.ParseBitString(Content);
     }
 }
 /// <summary>
@@ -89,8 +87,8 @@ public readonly struct KeyUsage
                     bool encipherOnly = false)
     {
         Critical = critical;
-        KeyUsages = new bool[8]
-        {
+        KeyUsages =
+        [
             digitalSignature,
             nonRepudiation,
             keyEncipherment,
@@ -99,10 +97,29 @@ public readonly struct KeyUsage
             keyCertSign,
             cRLSign,
             encipherOnly,
-        };
+        ];
     }
 #nullable enable
     public readonly bool[]? KeyUsages { get; }
+    public byte KeyUsageByteValue
+    {
+        get
+        {
+            if (KeyUsages is null)
+                return 0;
+            byte result = 0;
+
+            for (int i = 0; i < 8; i++)
+            {
+                if (KeyUsages[i])
+                {
+                    result |= (byte)(1 << (7 - i));
+                }
+            }
+
+            return result;
+        }
+    }
 #nullable restore
 
     public readonly bool DigitalSignature => KeyUsages?[0] ?? false;

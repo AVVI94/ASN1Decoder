@@ -4,12 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Asn1DecoderNet5.Tags;
+namespace ASN1Decoder.NET.Tags;
 
 #nullable enable
-public struct ExtendedKeyUsageTag
+public struct ExtendedKeyUsage
 {
-    public ExtendedKeyUsageTag(bool clientAuth = false,
+    public ExtendedKeyUsage(bool clientAuth = false,
                                bool serverAuth = false,
                                bool codeSigning = false,
                                bool emailProtection = false,

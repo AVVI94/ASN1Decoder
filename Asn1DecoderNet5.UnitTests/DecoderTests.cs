@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace Asn1DecoderNet5.UnitTests
+namespace ASN1Decoder.NET.UnitTests
 {
     public class DecoderTests
     {

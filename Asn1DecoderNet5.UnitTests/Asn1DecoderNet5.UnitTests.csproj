@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Asn1DecoderNet5\Asn1DecoderNet5.csproj" />
+    <ProjectReference Include="..\Asn1DecoderNet5\ASN1Decoder.NET.csproj" />
   </ItemGroup>
 
 </Project>

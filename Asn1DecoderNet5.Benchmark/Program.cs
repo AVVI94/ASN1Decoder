@@ -1,9 +1,9 @@
 ﻿using System;
-using Asn1DecoderNet5.Interfaces;
+using ASN1Decoder.NET.Interfaces;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
 
-namespace Asn1DecoderNet5.Benchmark
+namespace ASN1Decoder.NET.Benchmark
 {
     class Program
     {

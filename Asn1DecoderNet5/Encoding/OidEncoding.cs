@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Asn1DecoderNet5.OIDEncoding
+namespace ASN1Decoder.NET.OIDEncoding
 {
     /// <summary>
     /// Class for help with Encoding/Decoding the OID values
@@ -54,9 +54,19 @@ namespace Asn1DecoderNet5.OIDEncoding
                 {
                     //https://www.sysadmins.lv/blog-en/how-to-encode-object-identifier-to-an-asn1-der-encoded-string.aspx
                     var bytes = BitConverter.GetBytes(x).Where(y => y != 0).Reverse().ToList();
-                    var b = new byte[bytes.Count];
+                    byte[] b;
+                    if (bytes.Count == 1)
+                    {
+                        b = new byte[2];
+
+                    }
+                    else
+                    {
+                        b = new byte[bytes.Count];
+                    }
                     b[0] = (byte)(x & 0x7F);
-                    for (int y = 1; y < bytes.Count; y++)
+
+                    for (int y = 1; y < b.Length; y++)
                         b[y] = (byte)(((x >> 7 * y)) | 0x80);
 
                     res.AddRange(b.Reverse());

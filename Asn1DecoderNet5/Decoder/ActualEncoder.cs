@@ -1,20 +1,18 @@
-﻿using System;
+﻿using ASN1Decoder.NET.Tags;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Asn1DecoderNet5.Interfaces;
-namespace Asn1DecoderNet5;
+namespace ASN1Decoder.NET;
 internal class ActualEncoder
 {
-    internal static List<byte> Encode(IReadOnlyTag tag)
+    internal static List<byte> Encode(ITag tag)
     {
         var res = new List<byte>();
         var res2 = new List<byte>();
         res.Add((byte)tag.TagNumber);
-        if (tag.Childs.Count > 0)
+        if (tag.Children.Count > 0)
         {
-            foreach (var child in tag.Childs)
+            foreach (var child in tag.Children)
             {
                 res2.AddRange(Encode(child));
             }

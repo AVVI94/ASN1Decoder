@@ -5,19 +5,18 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
-using Asn1DecoderNet5.Interfaces;
-using Asn1DecoderNet5.Tags;
-namespace Asn1DecoderNet5.CSR;
+using ASN1Decoder.NET.Tags;
+namespace ASN1Decoder.NET.CSR;
 
 #nullable enable
-public class CertificationRequest
+public class RSACertificationRequestBuilder
 {
 
-    public CertificationRequest(OID signatureAlgorithmOid, HashAlgorithm signatureHashAlgorithm)
+    public RSACertificationRequestBuilder(OID signatureAlgorithmOid, HashAlgorithm signatureHashAlgorithm)
     {
-        PublicKeyInfo = new Sequence(new List<IReadOnlyTag>()
+        PublicKeyInfo = new Sequence(new List<ITag>()
         {
-            new Sequence(new List<IReadOnlyTag>()
+            new Sequence(new List<ITag>()
             {
                 new ObjectIdentifier(OID.GetOrCreate(OID.RSA_ENCRYPTION).ByteValue),
                 new Null()
@@ -28,8 +27,8 @@ public class CertificationRequest
     }
 
     public List<Set> Subject { get; } = new();
-    public List<IReadOnlyTag> RequestedExtensions { get; } = new();
-    public List<IReadOnlyTag> OtherElementsAfterExtensionRequestSequence { get; } = new();
+    public List<ITag> RequestedExtensions { get; } = new();
+    public List<ITag> OtherElementsAfterExtensionRequestSequence { get; } = new();
     public OID SignatureAlgorithmOid { get; private set; }
     public HashAlgorithm SignatureHashAlgorithm { get; private set; }
     public Sequence PublicKeyInfo { get; private set; }
@@ -38,8 +37,8 @@ public class CertificationRequest
     public byte[] BuildRequest(RSACryptoServiceProvider keyPair)
     {
         var version = new Integer(new byte[1] { 0x0 });
-        var subject = new Sequence(Subject.Cast<IReadOnlyTag>().ToList());
-        var keyAlg = new Sequence(new List<IReadOnlyTag>()
+        var subject = new Sequence(Subject.Cast<ITag>().ToList());
+        var keyAlg = new Sequence(new List<ITag>()
         {
             new ObjectIdentifier(SignatureAlgorithmOid.ByteValue),
             new Null()
@@ -47,7 +46,7 @@ public class CertificationRequest
 
         var keyParams = keyPair.ExportParameters(false);
 
-        var key = new Sequence(new List<IReadOnlyTag>()
+        var key = new Sequence(new List<ITag>()
         {
             new Integer(keyParams.Modulus),
             new Integer(keyParams.Exponent),
@@ -55,17 +54,17 @@ public class CertificationRequest
         var bkey = new List<byte>() { 0x0, 0x0 };
         bkey.AddRange(Decoder.Encode(key));
 
-        ((List<IReadOnlyTag>)PublicKeyInfo.Childs).Add(new BitString(bkey.ToArray()));
-        
-        var ext = new ContextSpecific_0(null, new List<IReadOnlyTag>()
+        ((List<ITag>)PublicKeyInfo.Children).Add(new BitString(bkey.ToArray()));
+
+        var ext = new ContextSpecific_0(null, new List<ITag>()
         {
             new ObjectIdentifier(OID.OidDictionary[OID.EXTENSION_REQUEST].ByteValue),
-            new Set(new List<IReadOnlyTag>()
+            new Set(new List<ITag>()
             {
                 new Sequence(RequestedExtensions)
             })
         });
-        var certRequestInfo = new Sequence(new List<IReadOnlyTag>()
+        var certRequestInfo = new Sequence(new List<ITag>()
             {
                 version,
                 subject,
@@ -74,7 +73,7 @@ public class CertificationRequest
             });
         var toBeSigned = Decoder.Encode(certRequestInfo);
         var signature = keyPair.SignData(toBeSigned, SignatureHashAlgorithm);
-        var request = new Sequence(new List<IReadOnlyTag>()
+        var request = new Sequence(new List<ITag>()
         {
             certRequestInfo,
             keyAlg,
@@ -85,9 +84,9 @@ public class CertificationRequest
 
     public void AddSubjectItem(SubjectItemKind itemKind, byte[] value, bool useUtf8StringValueTag)
     {
-        static Sequence CreateSeq(IReadOnlyTag oid, IReadOnlyTag value) => new(new List<IReadOnlyTag>() { oid, value });
+        static Sequence CreateSeq(ITag oid, ITag value) => new(new List<ITag>() { oid, value });
         static ObjectIdentifier CreateOid(SubjectItemKind itemKind) => new(OID.GetOrCreate(itemKind.ToOidString()).ByteValue);
-        static IReadOnlyTag CreateVal(byte[] val, bool utf8) => utf8 ? new Utf8String(val) : new PritnableString(val);
+        static ITag CreateVal(byte[] val, bool utf8) => utf8 ? new Utf8String(val) : new PrintableString(val);
 
         var seq = itemKind switch
         {
@@ -96,19 +95,19 @@ public class CertificationRequest
             SubjectItemKind.Surname => CreateSeq(CreateOid(SubjectItemKind.Surname), CreateVal(value, useUtf8StringValueTag)),
             SubjectItemKind.CountryName => CreateSeq(CreateOid(SubjectItemKind.CountryName), CreateVal(value, useUtf8StringValueTag)),
             SubjectItemKind.OrganizationName => CreateSeq(CreateOid(SubjectItemKind.OrganizationName), CreateVal(value, useUtf8StringValueTag)),
-            SubjectItemKind.OrganizationUnit => CreateSeq(CreateOid(SubjectItemKind.OrganizationUnit), CreateVal(value, useUtf8StringValueTag)),
+            SubjectItemKind.OrganizationUnitName => CreateSeq(CreateOid(SubjectItemKind.OrganizationUnitName), CreateVal(value, useUtf8StringValueTag)),
             SubjectItemKind.StateOrProvinceName => CreateSeq(CreateOid(SubjectItemKind.StateOrProvinceName), CreateVal(value, useUtf8StringValueTag)),
-            SubjectItemKind.Locality => CreateSeq(CreateOid(SubjectItemKind.Locality), CreateVal(value, useUtf8StringValueTag)),
+            SubjectItemKind.LocalityName => CreateSeq(CreateOid(SubjectItemKind.LocalityName), CreateVal(value, useUtf8StringValueTag)),
             SubjectItemKind.SerialNumber => CreateSeq(CreateOid(SubjectItemKind.SerialNumber), CreateVal(value, useUtf8StringValueTag)),
             SubjectItemKind.Title => CreateSeq(CreateOid(SubjectItemKind.Title), CreateVal(value, useUtf8StringValueTag)),
             _ => throw new ArgumentException("Parameter 'itemKind' has invalid value!", nameof(itemKind)),
         };
-        Subject.Add(new Set(new List<IReadOnlyTag>() { seq }));
+        Subject.Add(new Set(new List<ITag>() { seq }));
     }
 
-    public void AddExtensionRequest(ObjectIdentifier reqOid, bool critical, IReadOnlyTag value)
+    public void AddExtensionRequest(ObjectIdentifier reqOid, bool critical, ITag value)
     {
-        var ext = new List<IReadOnlyTag>() { reqOid };
+        var ext = new List<ITag>() { reqOid };
         if (critical)
             ext.Add(new BooleanTag(Extensions._booleanTrueSequence));
         ext.Add(value);
@@ -117,11 +116,9 @@ public class CertificationRequest
 
     public void SetKeyUsage(KeyUsage keyUsage)
     {
-        var ba = new BitArray(keyUsage.KeyUsages);
-        var bytes = new byte[1];
-        ba.CopyTo(bytes, 0);
         AddExtensionRequest(new ObjectIdentifier(OID.GetOrCreate(OID.KEY_USAGE).ByteValue),
                             keyUsage.Critical,
-                            new OctetString(children: new List<IReadOnlyTag>() { new BitString(bytes) }));
+                            new OctetString(children: new List<ITag>() { new BitString(keyUsage.KeyUsageByteValue) }));
     }
+
 }

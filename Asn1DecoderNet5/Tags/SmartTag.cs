@@ -1,28 +1,29 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using System.Text;
-using Asn1DecoderNet5.Interfaces;
 
-namespace Asn1DecoderNet5.Tags
+namespace ASN1Decoder.NET.Tags
 {
     /// <summary>
-    /// Tag class
+    /// Generic tag structure used for decoding ASN.1 data
     /// </summary>
-    public struct Tag : ITag
+    [DebuggerDisplay("{TagName}")]
+    internal class SmartTag : IReadOnlyTag
     {
         /// <summary>
         /// Creates new instance of Tag
         /// </summary>
         /// <param name="stream">Stream that is being currently decoded</param>
         /// <param name="streamPosition">Position in the stream</param>
-        public Tag(byte[] stream, ref int streamPosition)
+        public SmartTag(byte[] stream, ref int streamPosition)
         {
             TagClass = stream[streamPosition] >> 6;
             TagNumber = stream[streamPosition];
             IsConstructed = ((stream[streamPosition] & 0x20) != 0);
-            Childs = new List<ITag>();
+            Children = new List<ITag>();
             streamPosition++;
 
             TagName =
@@ -69,43 +70,17 @@ namespace Asn1DecoderNet5.Tags
             ReadableContent = null;
         }
 
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public int TagNumber { get; set; }
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public string TagName { get; set; }
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public int TagClass { get; set; }
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
+        public int TagNumber { get; }
+        public string TagName { get; }
+        public int TagClass { get; }
         public bool IsConstructed { get; internal set; }
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public readonly bool IsUniversal => this.TagClass == 0x00;
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public readonly bool IsEoc => TagClass == 0x00 && TagNumber == 0x00;
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public List<ITag> Childs { get; set; }
-        readonly IReadOnlyList<IReadOnlyTag> IReadOnlyTag.Childs => Childs.Cast<IReadOnlyTag>().ToList();
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        public byte[] Content { get; set; }
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
+        public bool IsUniversal => this.TagClass == 0x00;
+        public bool IsEoc => TagClass == 0x00 && TagNumber == 0x00;
+
+        public IList<ITag> Children { get; set; }
+        IReadOnlyList<IReadOnlyTag> IReadOnlyTag.Children => (IReadOnlyList<IReadOnlyTag>)Children;
         public string ReadableContent { get; set; }
+        public byte[] Content { get; internal set; }
 
         /// <summary>
         /// <inheritdoc/>
@@ -114,7 +89,7 @@ namespace Asn1DecoderNet5.Tags
         {
             if (!IsUniversal)
             {
-                if (Childs.Count < 1)
+                if (Children.Count < 1)
                 {
                     ReadableContent = ParseOctetString();
                     return;
@@ -141,7 +116,7 @@ namespace Asn1DecoderNet5.Tags
 #pragma warning restore CS8509
         }
 
-        readonly string ParseOid()
+        string ParseOid()
         {
             var oid = OIDEncoding.OidEncoding.GetString(Content);
 
@@ -159,7 +134,7 @@ namespace Asn1DecoderNet5.Tags
             return oid;
         }
 
-        readonly string ParseUtfString()
+        string ParseUtfString()
         {
             StringBuilder sb = new StringBuilder();
             int Ex(byte c)
@@ -207,7 +182,7 @@ namespace Asn1DecoderNet5.Tags
             return sb.ToString();
         }
 
-        readonly string ParseIsoString()
+        string ParseIsoString()
         {
             StringBuilder sb = new StringBuilder();
 
@@ -219,7 +194,7 @@ namespace Asn1DecoderNet5.Tags
             return sb.ToString();
         }
 
-        readonly string ParseBmpString()
+        string ParseBmpString()
         {
             StringBuilder sb = new StringBuilder();
             byte hi, low;
@@ -233,7 +208,7 @@ namespace Asn1DecoderNet5.Tags
             return sb.ToString();
         }
 
-        readonly string ParseInteger()
+        string ParseInteger()
         {
             StringBuilder sb = new StringBuilder();
             foreach (var hex in BitConverter.ToString(Content).Split('-').ToList())
@@ -265,7 +240,7 @@ namespace Asn1DecoderNet5.Tags
             return sb.ToString();
         }
 
-        readonly string ParseOctetString()
+        string ParseOctetString()
         {
             try
             {
@@ -289,7 +264,7 @@ namespace Asn1DecoderNet5.Tags
             return BitConverter.ToString(Content).Replace("-", "");
         }
 
-        readonly string ParseTime()
+        string ParseTime()
         {
             var s = ParseIsoString();
             if (this.TagNumber == 23)
@@ -303,7 +278,7 @@ namespace Asn1DecoderNet5.Tags
             return s;
         }
 
-        readonly string ParseBoolean()
+        string ParseBoolean()
         {
             return (Content[0] == 0xff).ToString();
         }

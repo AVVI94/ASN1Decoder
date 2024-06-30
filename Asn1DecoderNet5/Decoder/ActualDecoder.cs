@@ -3,10 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Asn1DecoderNet5.Interfaces;
-using Asn1DecoderNet5.Tags;
+using ASN1Decoder.NET.Tags;
 
-namespace Asn1DecoderNet5
+namespace ASN1Decoder.NET
 {
     internal class ActualDecoder
     {
@@ -14,9 +13,9 @@ namespace Asn1DecoderNet5
         //"global" stream position
         int i = 0;
 #pragma warning restore IDE1006 // Naming styles
-        public ITag Decode(byte[] data)
+        public SmartTag Decode(byte[] data)
         {
-            var tag = new Tag(data, ref i);
+            var tag = new SmartTag(data, ref i);
             var len = DecodeLength(data);
             var start = i;
 
@@ -24,15 +23,15 @@ namespace Asn1DecoderNet5
             {
                 GetChilds(data, ref tag, ref len, start);
             }
-            else if (tag.IsUniversal && (tag.TagNumber == (int)Tags.Tags.BIT_STRING || tag.TagNumber == (int)Tags.Tags.OCTET_STRING))
+            else if (tag.IsUniversal && (tag.TagNumber == (int)Tags.TagNames.BIT_STRING || tag.TagNumber == (int)Tags.TagNames.OCTET_STRING))
             {
                 try
                 {
-                    if (tag.TagNumber == (int)Tags.Tags.BIT_STRING)
+                    if (tag.TagNumber == (int)Tags.TagNames.BIT_STRING)
                         if (data[++i] != 0)
                             throw new Exception("BitString with unused bits cannot encapsulate");
                     GetChilds(data, ref tag, ref len, start);
-                    foreach (var ch in tag.Childs)
+                    foreach (var ch in tag.Children)
                     {
                         if (ch.IsEoc)
                             throw new Exception("EOC is not supposed to be actual content");
@@ -40,10 +39,10 @@ namespace Asn1DecoderNet5
                 }
                 catch
                 {
-                    tag.Childs.Clear();
+                    tag.Children.Clear();
                 }
             }
-            if (tag.Childs.Count == 0)
+            if (tag.Children.Count == 0)
             {
                 if (len == null)
                     throw new Exception($"Cannot skip over an invalid tag with indefinite length at offset {start}");
@@ -57,13 +56,13 @@ namespace Asn1DecoderNet5
                 var crit = tag.IsKeyUsageCritical();
                 var bs = tag.GetKeyUsageBitStringTag();
                 //change the BIT_STRING tag instance from generic Tag to KeyUsageTag
-                tag.Childs[2].Childs[0] = new KeyUsageTag(in bs, crit);
+                tag.Children[2].Children[0] = new KeyUsageTag(in bs, crit);
             }
-            tag.IsConstructed = tag.Childs.Count > 0;
+            tag.IsConstructed = tag.Children.Count > 0;
             return tag;
         }
 
-        void GetChilds(byte[] data, ref Tag tag, ref int? len, int start)
+        void GetChilds(byte[] data, ref SmartTag tag, ref int? len, int start)
         {
             if (len != null)
             {
@@ -73,7 +72,7 @@ namespace Asn1DecoderNet5
 
                 while (i < end)
                 {
-                    tag.Childs.Add(Decode(data));
+                    tag.Children.Add(Decode(data));
                 }
                 if (i != end)
                     throw new IndexOutOfRangeException($"Content size is not correct for container at offset {start}");
@@ -87,7 +86,7 @@ namespace Asn1DecoderNet5
                         var child = Decode(data);
                         if (child.IsEoc)
                             break;
-                        tag.Childs.Add(child);
+                        tag.Children.Add(child);
                     }
                     len = start - i;
                 }

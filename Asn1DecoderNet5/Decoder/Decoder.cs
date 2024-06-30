@@ -3,10 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Asn1DecoderNet5.Interfaces;
-using Asn1DecoderNet5.Tags;
+using ASN1Decoder.NET.Tags;
 
-namespace Asn1DecoderNet5
+namespace ASN1Decoder.NET
 {
     /// <summary>
     /// ASN1 Decoder
@@ -14,59 +13,59 @@ namespace Asn1DecoderNet5
     public static class Decoder
     {
         #region privateMethods
-        private static void ConvertTagsContentsToReadableStringsRecurse(ITag _tag)
+        private static void ConvertTagsContentsToReadableStringsRecurse(ITag tag)
         {
-            foreach (var child in _tag.Childs)
+            foreach (SmartTag child in tag.Children)
             {
-                if (child.Childs.Count > 0)
+                if (child.Children.Count > 0)
                     ConvertTagsContentsToReadableStringsRecurse(child);
                 else
                     child.ConvertContentToReadableContent();
             }
         }
 
-        private static string TagToStringRecurse(ITag _tag, int lvl, string structureSpacer, int maxContentLineLength, ref string lastOid)
+        private static string TagToStringRecurse(SmartTag tag, int lvl, string structureSpacer, int maxContentLineLength, ref string lastOid)
         {
             var sb = new StringBuilder();
-            if (_tag.Childs.Count > 0)
+            if (tag.Children.Count > 0)
             {
-                sb.Append($"{MultiplyString(structureSpacer, lvl)}{_tag.TagName}{Environment.NewLine}");
-                foreach (var child in _tag.Childs)
+                sb.Append($"{MultiplyString(structureSpacer, lvl)}{tag.TagName}{Environment.NewLine}");
+                foreach (SmartTag child in tag.Children)
                 {
                     sb.Append(TagToStringRecurse(child, lvl + 1, structureSpacer, maxContentLineLength, ref lastOid));
                 }
             }
             else
             {
-                if (_tag.TagNumber == 6)
+                if (tag.TagNumber == 6)
                 {
-                    lastOid = _tag.ReadableContent;
+                    lastOid = tag.ReadableContent;
                 }
                 #region OID_SpecificProcessing
-                if (_tag.TagNumber == 3 && lastOid == "2.5.29.15, keyUsage, X.509 extension")
+                if (tag.TagNumber == 3 && lastOid == "2.5.29.15, keyUsage, X.509 extension")
                 {
-                    ConvertKeyUsageFromBitStringToReadableString(_tag, sb.ToString());
+                    ConvertKeyUsageFromBitStringToReadableString(tag, sb.ToString());
                 }
                 #endregion
-                if (maxContentLineLength > 0 && _tag.ReadableContent.Length > maxContentLineLength)
+                if (maxContentLineLength > 0 && tag.ReadableContent.Length > maxContentLineLength)
                 {
-                    string[] firstSplit = FormatContentByMaxCharactersPerLine(_tag, lvl, structureSpacer, maxContentLineLength);
+                    string[] firstSplit = FormatContentByMaxCharactersPerLine(tag, lvl, structureSpacer, maxContentLineLength);
 
-                    _tag.ReadableContent = Environment.NewLine;
-                    _tag.ReadableContent += string.Join(Environment.NewLine, firstSplit);
+                    tag.ReadableContent = Environment.NewLine;
+                    tag.ReadableContent += string.Join(Environment.NewLine, firstSplit);
 
-                    _tag.ReadableContent = _tag.ReadableContent.TrimEnd();
+                    tag.ReadableContent = tag.ReadableContent.TrimEnd();
 
-                    sb.Append($"{MultiplyString(structureSpacer, lvl)}{_tag.TagName} {_tag.ReadableContent}{Environment.NewLine}");
+                    sb.Append($"{MultiplyString(structureSpacer, lvl)}{tag.TagName} {tag.ReadableContent}{Environment.NewLine}");
                 }
                 else
-                    sb.Append($"{MultiplyString(structureSpacer, lvl)}{_tag.TagName} {_tag.ReadableContent}{Environment.NewLine}");
+                    sb.Append($"{MultiplyString(structureSpacer, lvl)}{tag.TagName} {tag.ReadableContent}{Environment.NewLine}");
             }
 
             return sb.ToString();
         }
 
-        private static string[] FormatContentByMaxCharactersPerLine(ITag _tag, int lvl, string structureSpacer, int maxContentLineLength)
+        private static string[] FormatContentByMaxCharactersPerLine(SmartTag _tag, int lvl, string structureSpacer, int maxContentLineLength)
         {
             var spacer = MultiplyString(structureSpacer, lvl + 1);
             var firstSplit = _tag.ReadableContent.Replace("\r\n", "\n").Split('\n');
@@ -102,7 +101,7 @@ namespace Asn1DecoderNet5
             return tmp;
         }
 
-        private static void ConvertKeyUsageFromBitStringToReadableString(ITag tag, string tmp)
+        private static void ConvertKeyUsageFromBitStringToReadableString(SmartTag tag, string tmp)
         {
             var hex = BitConverter.ToString(tag.Content);
             var binSb = new StringBuilder();
@@ -140,7 +139,7 @@ namespace Asn1DecoderNet5
         #endregion
 
         #region publicAPI
-        public static byte[] Encode(IReadOnlyTag data)
+        public static byte[] Encode(ITag data)
         {
             return ActualEncoder.Encode(data).ToArray();
         }
@@ -149,8 +148,8 @@ namespace Asn1DecoderNet5
         /// Decode the DER encoded data sequence
         /// </summary>
         /// <param name="data">DER encoded data represented in bytes</param>
-        /// <returns><see cref="ITag"/> containing the decoded sequence</returns>
-        public static ITag Decode(byte[] data)
+        /// <returns><see cref="SmartTag"/> containing the decoded sequence</returns>
+        public static IReadOnlyTag Decode(byte[] data)
         {
             return new ActualDecoder().Decode(data);
         }
@@ -162,11 +161,15 @@ namespace Asn1DecoderNet5
         /// <param name="structureSpacer">String used for structurizing the ASN1 output, " | " is recomended (whit the whitespaces)</param>
         /// <param name="maxContentLineLength">How many content characters can be in single line, zero for unlimited</param>
         /// <returns>Formated ASN1 structure string</returns>
-        public static string TagToString(ITag tag, string structureSpacer, int maxContentLineLength)
+        public static string TagToString(IReadOnlyTag tag, string structureSpacer, int maxContentLineLength)
         {
             ConvertTagsContentsToReadableStringsRecurse(tag);
             string lastOid = null;
-            return TagToStringRecurse(tag, 0, structureSpacer, maxContentLineLength, ref lastOid);
+            if (tag is not SmartTag s)
+            {
+                s = (SmartTag)Decode(Encode(tag));
+            }
+            return TagToStringRecurse(s, 0, structureSpacer, maxContentLineLength, ref lastOid);
         }
 
         /// <summary>
@@ -177,13 +180,13 @@ namespace Asn1DecoderNet5
         public static List<ITag> Desctructurize(ITag tag)
         {
             List<ITag> list = new List<ITag>();
-            if (tag.Childs.Count == 0)
+            if (tag.Children.Any())
             {
                 list.Add(tag);
             }
             else
             {
-                foreach (var item in tag.Childs)
+                foreach (var item in tag.Children)
                 {
                     list.AddRange(Desctructurize(item));
                 }

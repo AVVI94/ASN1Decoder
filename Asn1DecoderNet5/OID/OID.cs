@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Asn1DecoderNet5
+namespace ASN1Decoder.NET
 {
     /// <summary>
     /// Class representing Object Identifier
@@ -26,8 +26,8 @@ namespace Asn1DecoderNet5
         public const string ICA_IK_MPSV = "1.3.6.1.4.1.11801.2.1";
         public const string ICA_CERT_INTERCONNECTION = "1.3.6.1.4.1.23624.4.7";
         public const string EXTENSION_REQUEST = "1.2.840.113549.1.9.14";
-        public const string EXT_KEY_USAGE = "2.5.29.37";
         public const string KEY_USAGE = "2.5.29.15";
+        public const string EXT_KEY_USAGE = "2.5.29.37";
         public const string SUBJECT_ALT_NAME = "2.5.29.17";
         public const string EKU_SERVER_AUTH = "1.3.6.1.5.5.7.3.1";
         public const string EKU_CLIENT_AUTH = "1.3.6.1.5.5.7.3.2";
@@ -36,6 +36,11 @@ namespace Asn1DecoderNet5
         public const string EKU_TIME_STAMPING = "1.3.6.1.5.5.7.3.8";
         public const string EKU_OCSP_SIGNING = "1.3.6.1.5.5.7.3.9";
         public const string RSA_ENCRYPTION = "1.2.840.113549.1.1.1";
+        public const string EC_PUBLIC_KEY = "1.2.840.10045.2.1";
+        public const string ORGANIZATION_IDENTIFIER = "2.5.4.97";
+        public const string STREET_ADDRESS = "2.5.4.9";
+        public const string POSTAL_CODE = "2.5.4.17";
+
 
         /// <summary>
         /// Constructor
@@ -691,7 +696,7 @@ namespace Asn1DecoderNet5
 {"1.2.840.10045.1.2.3.2",new OID("1.2.840.10045.1.2.3.2","tpBasis","ANSI X9.62 field basis")},
 {"1.2.840.10045.1.2.3.3",new OID("1.2.840.10045.1.2.3.3","ppBasis","ANSI X9.62 field basis")},
 {"1.2.840.10045.2",new OID("1.2.840.10045.2","publicKeyType","ANSI X9.62")},
-{"1.2.840.10045.2.1",new OID("1.2.840.10045.2.1","ecPublicKey","ANSI X9.62 public key type")},
+{EC_PUBLIC_KEY,new OID(EC_PUBLIC_KEY,"ecPublicKey","ANSI X9.62 public key type")},
 {"1.2.840.10045.3.0.1",new OID("1.2.840.10045.3.0.1","c2pnb163v1","ANSI X9.62 named elliptic curve")},
 {"1.2.840.10045.3.0.2",new OID("1.2.840.10045.3.0.2","c2pnb163v2","ANSI X9.62 named elliptic curve")},
 {"1.2.840.10045.3.0.3",new OID("1.2.840.10045.3.0.3","c2pnb163v3","ANSI X9.62 named elliptic curve")},
@@ -1809,7 +1814,7 @@ namespace Asn1DecoderNet5
 {"2.5.4.7.1",new OID("2.5.4.7.1","collectiveLocalityName","X.520 DN component")},
 {STATE_OR_PROVINCE_NAME,new OID(STATE_OR_PROVINCE_NAME,"stateOrProvinceName","X.520 DN component")},
 {"2.5.4.8.1",new OID("2.5.4.8.1","collectiveStateOrProvinceName","X.520 DN component")},
-{"2.5.4.9",new OID("2.5.4.9","streetAddress","X.520 DN component")},
+{STREET_ADDRESS,new OID(STREET_ADDRESS,"streetAddress","X.520 DN component")},
 {"2.5.4.9.1",new OID("2.5.4.9.1","collectiveStreetAddress","X.520 DN component")},
 {ORGANIZATION_NAME,new OID(ORGANIZATION_NAME,"organizationName","X.520 DN component")},
 {"2.5.4.10.1",new OID("2.5.4.10.1","collectiveOrganizationName","X.520 DN component")},
@@ -1821,7 +1826,7 @@ namespace Asn1DecoderNet5
 {"2.5.4.15",new OID("2.5.4.15","businessCategory","X.520 DN component")},
 {"2.5.4.16",new OID("2.5.4.16","postalAddress","X.520 DN component")},
 {"2.5.4.16.1",new OID("2.5.4.16.1","collectivePostalAddress","X.520 DN component")},
-{"2.5.4.17",new OID("2.5.4.17","postalCode","X.520 DN component")},
+{POSTAL_CODE,new OID(POSTAL_CODE,"postalCode","X.520 DN component")},
 {"2.5.4.17.1",new OID("2.5.4.17.1","collectivePostalCode","X.520 DN component")},
 {"2.5.4.18",new OID("2.5.4.18","postOfficeBox","X.520 DN component")},
 {"2.5.4.18.1",new OID("2.5.4.18.1","collectivePostOfficeBox","X.520 DN component")},
@@ -1890,7 +1895,7 @@ namespace Asn1DecoderNet5
 {"2.5.4.75",new OID("2.5.4.75","xMLPrivilegeInfo","X.520 DN component")},
 {"2.5.4.76",new OID("2.5.4.76","xmlPrivPolicy","X.520 DN component")},
 {"2.5.4.82",new OID("2.5.4.82","permission","X.520 DN component")},
-{"2.5.4.97",new OID("2.5.4.97","organizationIdentifier","X.520 DN component")},
+{ORGANIZATION_IDENTIFIER,new OID(ORGANIZATION_IDENTIFIER,"organizationIdentifier","X.520 DN component")},
 {"2.5.6.0",new OID("2.5.6.0","top","X.520 objectClass")},
 {"2.5.6.1",new OID("2.5.6.1","alias","X.520 objectClass")},
 {"2.5.6.2",new OID("2.5.6.2","country","X.520 objectClass")},

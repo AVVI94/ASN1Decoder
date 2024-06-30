@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Asn1DecoderNet5.Interfaces;
-using static Asn1DecoderNet5.Tags.ByteArray;
+using static ASN1Decoder.NET.Tags.ByteArray;
 
-namespace Asn1DecoderNet5.Tags;
+namespace ASN1Decoder.NET.Tags;
 #nullable enable
 static file class ByteArray
 {
@@ -17,12 +15,12 @@ static file class ByteArray
 #endif
 }
 
-public readonly struct Set : IReadOnlyTag
+public class Set : ITag
 {
-    public Set(List<IReadOnlyTag> children)
+    public Set(List<ITag> children)
     {
         Content = EmptyByteArray;
-        Childs = children ?? new();
+        Children = children ?? new List<ITag>();
     }
     public int TagNumber { get; } = 49;
     public string TagName { get; } = "SET";
@@ -30,15 +28,15 @@ public readonly struct Set : IReadOnlyTag
     public bool IsConstructed => true;
     public bool IsUniversal { get; } = true;
     public bool IsEoc { get; }
-    public IReadOnlyList<IReadOnlyTag> Childs { get; }
+    public IList<ITag> Children { get; }
     public byte[] Content { get; }
 }
-public readonly struct Eoc : IReadOnlyTag
+public class Eoc : ITag
 {
     public Eoc()
     {
         Content = EmptyByteArray;
-        Childs = new List<IReadOnlyTag>();
+        Children = new List<ITag>();
     }
     public int TagNumber { get; } = 0;
     public string TagName { get; } = "EOC";
@@ -46,15 +44,15 @@ public readonly struct Eoc : IReadOnlyTag
     public bool IsConstructed { get; } = false;
     public bool IsUniversal { get; } = true;
     public bool IsEoc { get; } = true;
-    public IReadOnlyList<IReadOnlyTag> Childs { get; }
+    public IList<ITag> Children { get; }
     public byte[] Content { get; }
 }
-public readonly struct BooleanTag : IReadOnlyTag
+public class BooleanTag : ITag
 {
     public BooleanTag(byte[]? content = null)
     {
         Content = content ?? EmptyByteArray;
-        Childs = new List<IReadOnlyTag>();
+        Children = new List<ITag>();
     }
     public int TagNumber { get; } = 1;
     public string TagName { get; } = "BOOLEAN";
@@ -62,15 +60,15 @@ public readonly struct BooleanTag : IReadOnlyTag
     public bool IsConstructed { get; } = false;
     public bool IsUniversal { get; } = true;
     public bool IsEoc { get; }
-    public IReadOnlyList<IReadOnlyTag> Childs { get; }
+    public IList<ITag> Children { get; }
     public byte[] Content { get; }
 }
-public readonly struct Integer : IReadOnlyTag
+public class Integer : ITag
 {
     public Integer(byte[]? content = null)
     {
         Content = content ?? EmptyByteArray;
-        Childs = new List<IReadOnlyTag>();
+        Children = new List<ITag>();
     }
     public int TagNumber { get; } = 2;
     public string TagName { get; } = "INTEGER";
@@ -78,47 +76,71 @@ public readonly struct Integer : IReadOnlyTag
     public bool IsConstructed { get; } = false;
     public bool IsUniversal { get; } = true;
     public bool IsEoc { get; }
-    public IReadOnlyList<IReadOnlyTag> Childs { get; }
+    public IList<ITag> Children { get; }
     public byte[] Content { get; }
 }
-public readonly struct BitString : IReadOnlyTag
+public class BitString : ITag
 {
-    public BitString(byte[]? content = null, List<IReadOnlyTag>? children = null)
+    public BitString(byte[]? content = null, IList<ITag>? children = null)
     {
-        Content = content ?? EmptyByteArray;
-        Childs = children ?? new();
+        if (content is not null)
+        {
+            var _ = CalculateUnusedBits(content);
+            Content = [(byte)_, .. content];
+        }
+        else
+            Content = EmptyByteArray;
+        //Content = content ?? EmptyByteArray;
+        Children = children ?? new List<ITag>();
     }
+    public BitString(byte content) : this([content], null) { }
+
     public int TagNumber { get; } = 3;
     public string TagName { get; } = "BIT_STRING";
     public int TagClass { get; } = 0;
-    public bool IsConstructed => Content.Length != 0 && Childs.Count == 0;
+    public bool IsConstructed => Content.Length != 0 && Children.Count == 0;
     public bool IsUniversal { get; } = true;
     public bool IsEoc { get; }
-    public IReadOnlyList<IReadOnlyTag> Childs { get; }
+    public IList<ITag> Children { get; }
     public byte[] Content { get; }
+
+    public static int CalculateUnusedBits(byte[] bitStringBytes)
+    {
+        byte lastByte = bitStringBytes[bitStringBytes.Length - 1];
+        int unusedBits = 0;
+        for (int i = 0; i < 8; i++)
+        {
+            if ((lastByte & (1 << i)) != 0)
+            {
+                unusedBits = 7 - i;
+                break;
+            }
+        }
+        return unusedBits;
+    }
 }
-public readonly struct OctetString : IReadOnlyTag
+public class OctetString : ITag
 {
-    public OctetString(byte[]? content = null, List<IReadOnlyTag>? children = null)
+    public OctetString(byte[]? content = null, IList<ITag>? children = null)
     {
         Content = content ?? EmptyByteArray;
-        Childs = children ?? new();
+        Children = children ?? new List<ITag>();
     }
     public int TagNumber { get; } = 4;
     public string TagName { get; } = "OCTET_STRING";
     public int TagClass { get; } = 0;
-    public bool IsConstructed => Content.Length != 0 && Childs.Count == 0;
+    public bool IsConstructed => Content.Length != 0 && Children.Count == 0;
     public bool IsUniversal { get; } = true;
     public bool IsEoc { get; }
-    public IReadOnlyList<IReadOnlyTag> Childs { get; }
+    public IList<ITag> Children { get; }
     public byte[] Content { get; }
 }
-public readonly struct ObjectIdentifier : IReadOnlyTag
+public class ObjectIdentifier : ITag
 {
     public ObjectIdentifier(byte[]? content = null)
     {
         Content = content ?? EmptyByteArray;
-        Childs = new List<IReadOnlyTag>();
+        Children = new List<ITag>();
     }
     public int TagNumber { get; } = 6;
     public string TagName { get; } = "OBJECT_IDENTIFIER";
@@ -126,14 +148,14 @@ public readonly struct ObjectIdentifier : IReadOnlyTag
     public bool IsConstructed { get; } = false;
     public bool IsUniversal { get; } = true;
     public bool IsEoc { get; }
-    public IReadOnlyList<IReadOnlyTag> Childs { get; }
+    public IList<ITag> Children { get; }
     public byte[] Content { get; }
 }
-public readonly struct Null : IReadOnlyTag
+public class Null : ITag
 {
     public Null()
     {
-        Childs = new List<IReadOnlyTag>();
+        Children = new List<ITag>();
         Content = EmptyByteArray;
     }
     public int TagNumber { get; } = 5;
@@ -142,47 +164,47 @@ public readonly struct Null : IReadOnlyTag
     public bool IsConstructed { get; } = false;
     public bool IsUniversal { get; } = true;
     public bool IsEoc { get; }
-    public IReadOnlyList<IReadOnlyTag> Childs { get; }
+    public IList<ITag> Children { get; }
     public byte[] Content { get; }
 }
-public readonly struct ObjectDescriptor : IReadOnlyTag
+public class ObjectDescriptor : ITag
 {
-    public ObjectDescriptor(byte[]? content = null, List<IReadOnlyTag>? children = null)
+    public ObjectDescriptor(byte[]? content = null, IList<ITag>? children = null)
     {
         Content = content ?? EmptyByteArray;
-        Childs = children ?? new();
+        Children = children ?? new List<ITag>();
     }
     public int TagNumber { get; } = 7;
     public string TagName { get; } = "ObjectDescriptor";
     public int TagClass { get; } = 0;
-    public bool IsConstructed => Content.Length != 0 && Childs.Count == 0;
+    public bool IsConstructed => Content.Length != 0 && Children.Count == 0;
     public bool IsUniversal { get; } = true;
     public bool IsEoc { get; }
-    public IReadOnlyList<IReadOnlyTag> Childs { get; }
+    public IList<ITag> Children { get; }
     public byte[] Content { get; }
 }
-public readonly struct External : IReadOnlyTag
+public class External : ITag
 {
-    public External(byte[]? content = null, List<IReadOnlyTag>? children = null)
+    public External(byte[]? content = null, IList<ITag>? children = null)
     {
         Content = content ?? EmptyByteArray;
-        Childs = children ?? new();
+        Children = children ?? new List<ITag>();
     }
     public int TagNumber { get; } = 8;
     public string TagName { get; } = "EXTERNAL";
     public int TagClass { get; } = 0;
-    public bool IsConstructed => Content.Length != 0 && Childs.Count == 0;
+    public bool IsConstructed => Content.Length != 0 && Children.Count == 0;
     public bool IsUniversal { get; } = true;
     public bool IsEoc { get; }
-    public IReadOnlyList<IReadOnlyTag> Childs { get; }
+    public IList<ITag> Children { get; }
     public byte[] Content { get; }
 }
-public readonly struct Real : IReadOnlyTag
+public class Real : ITag
 {
     public Real(byte[]? content = null)
     {
         Content = content ?? EmptyByteArray;
-        Childs = new List<IReadOnlyTag>();
+        Children = new List<ITag>();
     }
     public int TagNumber { get; } = 9;
     public string TagName { get; } = "REAL";
@@ -190,15 +212,15 @@ public readonly struct Real : IReadOnlyTag
     public bool IsConstructed { get; } = false;
     public bool IsUniversal { get; } = true;
     public bool IsEoc { get; }
-    public IReadOnlyList<IReadOnlyTag> Childs { get; }
+    public IList<ITag> Children { get; }
     public byte[] Content { get; }
 }
-public readonly struct Enumerated : IReadOnlyTag
+public class Enumerated : ITag
 {
     public Enumerated(byte[]? content = null)
     {
         Content = content ?? EmptyByteArray;
-        Childs = new List<IReadOnlyTag>();
+        Children = new List<ITag>();
     }
     public int TagNumber { get; } = 10;
     public string TagName { get; } = "ENUMERATED";
@@ -206,15 +228,15 @@ public readonly struct Enumerated : IReadOnlyTag
     public bool IsConstructed { get; } = false;
     public bool IsUniversal { get; } = true;
     public bool IsEoc { get; }
-    public IReadOnlyList<IReadOnlyTag> Childs { get; }
+    public IList<ITag> Children { get; }
     public byte[] Content { get; }
 }
-public readonly struct EnumeratedPdv : IReadOnlyTag
+public class EnumeratedPdv : ITag
 {
-    public EnumeratedPdv(List<IReadOnlyTag>? children = null)
+    public EnumeratedPdv(List<ITag>? children = null)
     {
         Content = EmptyByteArray;
-        Childs = children ?? new();
+        Children = children ?? new List<ITag>();
     }
     public int TagNumber { get; } = 10;
     public string TagName { get; } = "ENUMERATED_PDV";
@@ -222,31 +244,31 @@ public readonly struct EnumeratedPdv : IReadOnlyTag
     public bool IsConstructed => true;
     public bool IsUniversal { get; } = true;
     public bool IsEoc { get; }
-    public IReadOnlyList<IReadOnlyTag> Childs { get; }
+    public IList<ITag> Children { get; }
     public byte[] Content { get; }
 }
-public readonly struct Utf8String : IReadOnlyTag
+public class Utf8String : ITag
 {
-    public Utf8String(byte[]? content = null, List<IReadOnlyTag>? children = null)
+    public Utf8String(byte[]? content = null, IList<ITag>? children = null)
     {
         Content = content ?? EmptyByteArray;
-        Childs = children ?? new();
+        Children = children ?? new List<ITag>();
     }
     public int TagNumber { get; } = 12;
     public string TagName { get; } = "UTF8String";
     public int TagClass { get; } = 0;
-    public bool IsConstructed => Content.Length != 0 && Childs.Count == 0;
+    public bool IsConstructed => Content.Length != 0 && Children.Count == 0;
     public bool IsUniversal { get; } = true;
     public bool IsEoc { get; }
-    public IReadOnlyList<IReadOnlyTag> Childs { get; }
+    public IList<ITag> Children { get; }
     public byte[] Content { get; }
 }
-public readonly struct Sequence : IReadOnlyTag
+public class Sequence : ITag
 {
-    public Sequence(List<IReadOnlyTag>? children = null)
+    public Sequence(List<ITag>? children = null)
     {
         Content = EmptyByteArray;
-        Childs = children ?? new();
+        Children = children ?? new List<ITag>();
     }
     public int TagNumber { get; } = 48;
     public string TagName { get; } = "SEQUENCE";
@@ -254,305 +276,338 @@ public readonly struct Sequence : IReadOnlyTag
     public bool IsConstructed => true;
     public bool IsUniversal { get; } = true;
     public bool IsEoc { get; }
-    public IReadOnlyList<IReadOnlyTag> Childs { get; }
+    public IList<ITag> Children { get; }
     public byte[] Content { get; }
 }
-public readonly struct NumericString : IReadOnlyTag
+public class NumericString : ITag
 {
-    public NumericString(byte[]? content = null, List<IReadOnlyTag>? children = null)
+    public NumericString(byte[]? content = null, IList<ITag>? children = null)
     {
         Content = content ?? EmptyByteArray;
-        Childs = children ?? new();
+        Children = children ?? new List<ITag>();
     }
     public int TagNumber { get; } = 18;
     public string TagName { get; } = "NumericString";
     public int TagClass { get; } = 0;
-    public bool IsConstructed => Content.Length != 0 && Childs.Count == 0;
+    public bool IsConstructed => Content.Length != 0 && Children.Count == 0;
     public bool IsUniversal { get; } = true;
     public bool IsEoc { get; }
-    public IReadOnlyList<IReadOnlyTag> Childs { get; }
+    public IList<ITag> Children { get; }
     public byte[] Content { get; }
 }
-public readonly struct PritnableString : IReadOnlyTag
+public class PrintableString : ITag
 {
-    public PritnableString(byte[]? content = null, List<IReadOnlyTag>? children = null)
+    public PrintableString(byte[]? content = null, IList<ITag>? children = null)
     {
         Content = content ?? EmptyByteArray;
-        Childs = children ?? new();
+        Children = children ?? new List<ITag>();
     }
     public int TagNumber { get; } = 19;
     public string TagName { get; } = "PrintableString";
     public int TagClass { get; } = 0;
-    public bool IsConstructed => Content.Length != 0 && Childs.Count == 0;
+    public bool IsConstructed => Content.Length != 0 && Children.Count == 0;
     public bool IsUniversal { get; } = true;
     public bool IsEoc { get; }
-    public IReadOnlyList<IReadOnlyTag> Childs { get; }
+    public IList<ITag> Children { get; }
     public byte[] Content { get; }
+
+    public static void EnsureValidValue(string input)
+    {
+        // Check each character in the input string
+        for (int i = 0; i < input.Length; i++)
+        {
+            char c = input[i];
+            if (!IsAllowedCharacter(c))
+            {
+                throw new ArgumentException($"Invalid character '{c}' at index {i}. See ASN.1 PrintableString definition!", "value");
+            }
+        }
+    }
+
+    private static bool IsAllowedCharacter(char c)
+    {
+        // Check if the character is within the allowed ASCII ranges for PrintableString
+        return (c >= 'A' && c <= 'Z') || // Latin capital letters
+               (c >= 'a' && c <= 'z') || // Latin small letters
+               (c >= '0' && c <= '9') || // Numbers
+               c == ' ' || // SPACE
+               c == '\'' || // APOSTROPHE
+               c == '(' || // LEFT PARENTHESIS
+               c == ')' || // RIGHT PARENTHESIS
+               c == '+' || // PLUS SIGN
+               c == ',' || // COMMA
+               c == '-' || // HYPHEN-MINUS
+               c == '.' || // FULL STOP
+               c == '/' || // SOLIDUS
+               c == ':' || // COLON
+               c == '=' || // EQUALS SIGN
+               c == '?';   // QUESTION MARK
+    }
 }
-public readonly struct TeletextString : IReadOnlyTag
+public class TeletextString : ITag
 {
-    public TeletextString(byte[]? content = null, List<IReadOnlyTag>? children = null)
+    public TeletextString(byte[]? content = null, IList<ITag>? children = null)
     {
         Content = content ?? EmptyByteArray;
-        Childs = children ?? new();
+        Children = children ?? new List<ITag>();
     }
     public int TagNumber { get; } = 20;
     public string TagName { get; } = "TeletextString";
     public int TagClass { get; } = 0;
-    public bool IsConstructed => Content.Length != 0 && Childs.Count == 0;
+    public bool IsConstructed => Content.Length != 0 && Children.Count == 0;
     public bool IsUniversal { get; } = true;
     public bool IsEoc { get; }
-    public IReadOnlyList<IReadOnlyTag> Childs { get; }
+    public IList<ITag> Children { get; }
     public byte[] Content { get; }
 }
-public readonly struct VideotexString : IReadOnlyTag
+public class VideotexString : ITag
 {
-    public VideotexString(byte[]? content = null, List<IReadOnlyTag>? children = null)
+    public VideotexString(byte[]? content = null, IList<ITag>? children = null)
     {
         Content = content ?? EmptyByteArray;
-        Childs = children ?? new();
+        Children = children ?? new List<ITag>();
     }
     public int TagNumber { get; } = 21;
     public string TagName { get; } = "VideotexString";
     public int TagClass { get; } = 0;
-    public bool IsConstructed => Content.Length != 0 && Childs.Count == 0;
+    public bool IsConstructed => Content.Length != 0 && Children.Count == 0;
     public bool IsUniversal { get; } = true;
     public bool IsEoc { get; }
-    public IReadOnlyList<IReadOnlyTag> Childs { get; }
+    public IList<ITag> Children { get; }
     public byte[] Content { get; }
 }
-public readonly struct IA5String : IReadOnlyTag
+public class IA5String : ITag
 {
-    public IA5String(byte[]? content = null, List<IReadOnlyTag>? children = null)
+    public IA5String(byte[]? content = null, IList<ITag>? children = null)
     {
         Content = content ?? EmptyByteArray;
-        Childs = children ?? new();
+        Children = children ?? new List<ITag>();
     }
     public int TagNumber { get; } = 22;
     public string TagName { get; } = "IA5String";
     public int TagClass { get; } = 0;
-    public bool IsConstructed => Content.Length != 0 && Childs.Count == 0;
+    public bool IsConstructed => Content.Length != 0 && Children.Count == 0;
     public bool IsUniversal { get; } = true;
     public bool IsEoc { get; }
-    public IReadOnlyList<IReadOnlyTag> Childs { get; }
+    public IList<ITag> Children { get; }
     public byte[] Content { get; }
 }
-public readonly struct UTCTime : IReadOnlyTag
+public class UTCTime : ITag
 {
-    public UTCTime(byte[]? content = null, List<IReadOnlyTag>? children = null)
+    public UTCTime(byte[]? content = null, IList<ITag>? children = null)
     {
         Content = content ?? EmptyByteArray;
-        Childs = children ?? new();
+        Children = children ?? new List<ITag>();
     }
     public int TagNumber { get; } = 23;
     public string TagName { get; } = "UTCTime";
     public int TagClass { get; } = 0;
-    public bool IsConstructed => Content.Length != 0 && Childs.Count == 0;
+    public bool IsConstructed => Content.Length != 0 && Children.Count == 0;
     public bool IsUniversal { get; } = true;
     public bool IsEoc { get; }
-    public IReadOnlyList<IReadOnlyTag> Childs { get; }
+    public IList<ITag> Children { get; }
     public byte[] Content { get; }
 }
-public readonly struct GeneralizedTime : IReadOnlyTag
+public class GeneralizedTime : ITag
 {
-    public GeneralizedTime(byte[]? content = null, List<IReadOnlyTag>? children = null)
+    public GeneralizedTime(byte[]? content = null, IList<ITag>? children = null)
     {
         Content = content ?? EmptyByteArray;
-        Childs = children ?? new();
+        Children = children ?? new List<ITag>();
     }
     public int TagNumber { get; } = 24;
     public string TagName { get; } = "GeneralizedTime";
     public int TagClass { get; } = 0;
-    public bool IsConstructed => Content.Length != 0 && Childs.Count == 0;
+    public bool IsConstructed => Content.Length != 0 && Children.Count == 0;
     public bool IsUniversal { get; } = true;
     public bool IsEoc { get; }
-    public IReadOnlyList<IReadOnlyTag> Childs { get; }
+    public IList<ITag> Children { get; }
     public byte[] Content { get; }
 }
-public readonly struct GraphicString : IReadOnlyTag
+public class GraphicString : ITag
 {
-    public GraphicString(byte[]? content = null, List<IReadOnlyTag>? children = null)
+    public GraphicString(byte[]? content = null, IList<ITag>? children = null)
     {
         Content = content ?? EmptyByteArray;
-        Childs = children ?? new();
+        Children = children ?? new List<ITag>();
     }
     public int TagNumber { get; } = 25;
     public string TagName { get; } = "GraphicString";
     public int TagClass { get; } = 0;
-    public bool IsConstructed => Content.Length != 0 && Childs.Count == 0;
+    public bool IsConstructed => Content.Length != 0 && Children.Count == 0;
     public bool IsUniversal { get; } = true;
     public bool IsEoc { get; }
-    public IReadOnlyList<IReadOnlyTag> Childs { get; }
+    public IList<ITag> Children { get; }
     public byte[] Content { get; }
 }
-public readonly struct VisibleString : IReadOnlyTag
+public class VisibleString : ITag
 {
-    public VisibleString(byte[]? content = null, List<IReadOnlyTag>? children = null)
+    public VisibleString(byte[]? content = null, IList<ITag>? children = null)
     {
         Content = content ?? EmptyByteArray;
-        Childs = children ?? new();
+        Children = children ?? new List<ITag>();
     }
     public int TagNumber { get; } = 26;
     public string TagName { get; } = "VisibleString";
     public int TagClass { get; } = 0;
-    public bool IsConstructed => Content.Length != 0 && Childs.Count == 0;
+    public bool IsConstructed => Content.Length != 0 && Children.Count == 0;
     public bool IsUniversal { get; } = true;
     public bool IsEoc { get; }
-    public IReadOnlyList<IReadOnlyTag> Childs { get; }
+    public IList<ITag> Children { get; }
     public byte[] Content { get; }
 }
-public readonly struct GeneralString : IReadOnlyTag
+public class GeneralString : ITag
 {
-    public GeneralString(byte[]? content = null, List<IReadOnlyTag>? children = null)
+    public GeneralString(byte[]? content = null, IList<ITag>? children = null)
     {
         Content = content ?? EmptyByteArray;
-        Childs = children ?? new();
+        Children = children ?? new List<ITag>();
     }
     public int TagNumber { get; } = 27;
     public string TagName { get; } = "GeneralString";
     public int TagClass { get; } = 0;
-    public bool IsConstructed => Content.Length != 0 && Childs.Count == 0;
+    public bool IsConstructed => Content.Length != 0 && Children.Count == 0;
     public bool IsUniversal { get; } = true;
     public bool IsEoc { get; }
-    public IReadOnlyList<IReadOnlyTag> Childs { get; }
+    public IList<ITag> Children { get; }
     public byte[] Content { get; }
 }
-public readonly struct UniversalString : IReadOnlyTag
+public class UniversalString : ITag
 {
-    public UniversalString(byte[]? content = null, List<IReadOnlyTag>? children = null)
+    public UniversalString(byte[]? content = null, IList<ITag>? children = null)
     {
         Content = content ?? EmptyByteArray;
-        Childs = children ?? new();
+        Children = children ?? new List<ITag>();
     }
     public int TagNumber { get; } = 28;
     public string TagName { get; } = "UniversalString";
     public int TagClass { get; } = 0;
-    public bool IsConstructed => Content.Length != 0 && Childs.Count == 0;
+    public bool IsConstructed => Content.Length != 0 && Children.Count == 0;
     public bool IsUniversal { get; } = true;
     public bool IsEoc { get; }
-    public IReadOnlyList<IReadOnlyTag> Childs { get; }
+    public IList<ITag> Children { get; }
     public byte[] Content { get; }
 }
-public readonly struct BMPString : IReadOnlyTag
+public class BMPString : ITag
 {
-    public BMPString(byte[]? content = null, List<IReadOnlyTag>? children = null)
+    public BMPString(byte[]? content = null, IList<ITag>? children = null)
     {
         Content = content ?? EmptyByteArray;
-        Childs = children ?? new();
+        Children = children ?? new List<ITag>();
     }
     public int TagNumber { get; } = 30;
     public string TagName { get; } = "BMPString";
     public int TagClass { get; } = 0;
-    public bool IsConstructed => Content.Length != 0 && Childs.Count == 0;
+    public bool IsConstructed => Content.Length != 0 && Children.Count == 0;
     public bool IsUniversal { get; } = true;
     public bool IsEoc { get; }
-    public IReadOnlyList<IReadOnlyTag> Childs { get; }
+    public IList<ITag> Children { get; }
     public byte[] Content { get; }
 }
-public readonly struct UniversalTag : IReadOnlyTag
+public class UniversalTag : ITag
 {
-    public UniversalTag(int tagNumber, byte[]? content = null, List<IReadOnlyTag>? children = null)
+    public UniversalTag(int tagNumber, byte[]? content = null, IList<ITag>? children = null)
     {
         TagNumber = tagNumber;
         Content = content ?? EmptyByteArray;
-        Childs = children ?? new();
+        Children = children ?? new List<ITag>();
     }
     public int TagNumber { get; }
     public string TagName => "Universal_" + TagNumber;
     public int TagClass { get; } = 0;
-    public bool IsConstructed => Content.Length != 0 && Childs.Count == 0;
+    public bool IsConstructed => Content.Length != 0 && Children.Count == 0;
     public bool IsUniversal { get; } = true;
     public bool IsEoc { get; }
-    public IReadOnlyList<IReadOnlyTag> Childs { get; }
+    public IList<ITag> Children { get; }
     public byte[] Content { get; }
 }
-public readonly struct ContextSpecificTag : IReadOnlyTag
+public class ContextSpecificTag : ITag
 {
-    public ContextSpecificTag(int tagNumber, byte[]? content = null, List<IReadOnlyTag>? children = null)
+    public ContextSpecificTag(int tagNumber, byte[]? content = null, IList<ITag>? children = null)
     {
         TagNumber = tagNumber;
         TagName = $"[{tagNumber & 0x1F}]";
         Content = content ?? EmptyByteArray;
-        Childs = children ?? new();
+        Children = children ?? new List<ITag>();
     }
     public int TagNumber { get; }
     public string TagName { get; }
     public int TagClass { get; } = 2;
-    public bool IsConstructed => Content.Length != 0 && Childs.Count == 0;
+    public bool IsConstructed => Content.Length != 0 && Children.Count == 0;
     public bool IsUniversal { get; }
     public bool IsEoc { get; } = false;
-    public IReadOnlyList<IReadOnlyTag> Childs { get; }
+    public IList<ITag> Children { get; }
     public byte[] Content { get; }
 }
-public readonly struct ContextSpecific_0 : IReadOnlyTag
+public class ContextSpecific_0 : ITag
 {
-    public ContextSpecific_0(byte[]? content = null, List<IReadOnlyTag>? children = null)
+    public ContextSpecific_0(byte[]? content = null, IList<ITag>? children = null)
     {
         TagNumber = 160;
         TagName = $"[0]";
         Content = content ?? EmptyByteArray;
-        Childs = children ?? new();
+        Children = children ?? new List<ITag>();
     }
     public int TagNumber { get; }
     public string TagName { get; }
     public int TagClass { get; } = 2;
-    public bool IsConstructed => Content.Length != 0 && Childs.Count == 0;
+    public bool IsConstructed => Content.Length != 0 && Children.Count == 0;
     public bool IsUniversal { get; }
     public bool IsEoc { get; } = false;
-    public IReadOnlyList<IReadOnlyTag> Childs { get; }
+    public IList<ITag> Children { get; }
     public byte[] Content { get; }
 }
-public readonly struct ContextSpecific_1 : IReadOnlyTag
+public class ContextSpecific_1 : ITag
 {
-    public ContextSpecific_1(byte[]? content = null, List<IReadOnlyTag>? children = null)
+    public ContextSpecific_1(byte[]? content = null, IList<ITag>? children = null)
     {
         TagNumber = 161;
         TagName = $"[0]";
         Content = content ?? EmptyByteArray;
-        Childs = children ?? new();
+        Children = children ?? new List<ITag>();
     }
     public int TagNumber { get; }
     public string TagName { get; }
     public int TagClass { get; } = 2;
-    public bool IsConstructed => Content.Length != 0 && Childs.Count == 0;
+    public bool IsConstructed => Content.Length != 0 && Children.Count == 0;
     public bool IsUniversal { get; }
     public bool IsEoc { get; } = false;
-    public IReadOnlyList<IReadOnlyTag> Childs { get; }
+    public IList<ITag> Children { get; }
     public byte[] Content { get; }
 }
-public readonly struct ContextSpecific_2 : IReadOnlyTag
+public class ContextSpecific_2 : ITag
 {
-    public ContextSpecific_2(byte[]? content = null, List<IReadOnlyTag>? children = null)
+    public ContextSpecific_2(byte[]? content = null, IList<ITag>? children = null)
     {
         TagNumber = 162;
         TagName = $"[2]";
         Content = content ?? EmptyByteArray;
-        Childs = children ?? new();
+        Children = children ?? new List<ITag>();
     }
     public int TagNumber { get; }
     public string TagName { get; }
     public int TagClass { get; } = 2;
-    public bool IsConstructed => Content.Length != 0 && Childs.Count == 0;
+    public bool IsConstructed => Content.Length != 0 && Children.Count == 0;
     public bool IsUniversal { get; }
     public bool IsEoc { get; } = false;
-    public IReadOnlyList<IReadOnlyTag> Childs { get; }
+    public IList<ITag> Children { get; }
     public byte[] Content { get; }
 }
-public readonly struct ContextSpecific_3 : IReadOnlyTag
+public class ContextSpecific_3 : ITag
 {
-    public ContextSpecific_3(byte[]? content = null, List<IReadOnlyTag>? children = null)
+    public ContextSpecific_3(byte[]? content = null, IList<ITag>? children = null)
     {
         TagNumber = 163;
         TagName = $"[3]";
         Content = content ?? EmptyByteArray;
-        Childs = children ?? new();
+        Children = children ?? new List<ITag>();
     }
     public int TagNumber { get; }
     public string TagName { get; }
     public int TagClass { get; } = 2;
-    public bool IsConstructed => Content.Length != 0 && Childs.Count == 0;
+    public bool IsConstructed => Content.Length != 0 && Children.Count == 0;
     public bool IsUniversal { get; }
     public bool IsEoc { get; } = false;
-    public IReadOnlyList<IReadOnlyTag> Childs { get; }
+    public IList<ITag> Children { get; }
     public byte[] Content { get; }
 }
